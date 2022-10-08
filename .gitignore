@@ -1,0 +1,4 @@
+/build/
+/dist/
+/PyRAL.egg-info/
+*.log
