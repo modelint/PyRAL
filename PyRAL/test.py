@@ -4,11 +4,11 @@ test.py -- test the library
 """
 import logging
 import logging.config
+import database  # creates a tcl interpreter with TclRAL package
 from rtypes import Attribute
 from relvar import Relvar
 from pathlib import Path
 from PyRAL import version
-from database import db
 
 _logpath = Path("PyRAL.log")
 
@@ -21,7 +21,7 @@ def get_logger():
 
 
 def test():
-    logger = logging.getLogger(__name__)
+    logger = get_logger()
     logger.info(f'PyRAL version: {version}')
     logger.info("Starting test")
     r = Relvar(
@@ -30,7 +30,7 @@ def test():
             Attribute(name='Name', type='string'),
             Attribute(name='Alias', type='string')
         ],
-        identifiers=['Name', 'Alias']
+        identifiers=([['Name'], ['Alias']])
     )
     logger.info("No problemo")  # We didn't die on an exception, basically
 
