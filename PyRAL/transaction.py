@@ -1,50 +1,45 @@
 """
-transaction.py -- Proxy for a TclRAL relvar
+transaction.py -- Database transaction
 """
 import logging
 from database import db
-from typing import List
-from rtypes import Attribute
 
 
 class Transaction:
     """
-    Proxy for a TclRAL relvar
+    A TclRAL transaction
 
     """
+    _statements = []
+    _cmd = ""
+    _logger = logging.getLogger(__name__)
+    _result = None
+    _schema = []
 
-    def __init__(self, name: str, header: List[Attribute], identifiers: List[List[str]]):
+    @classmethod
+    def build_schema(cls):
         """
-
-        :param name:
-        :param header:
-        """
-        self.logger = logging.getLogger(__name__)
-        self.name = name
-        self.header = header
-        self.identifiers = identifiers
-
-        self.create()
-
-    def create(self):
-        """
-        Create in TclRAL
+        Executes a set of Relvars and Constraints to define a database schema
         :return:
         """
-
-        # flatten header into a list of name, type fields
-        attr_fields = [attr_field for attr in [list(a) for a in self.header] for attr_field in attr]
-        # Convert this list into a string of the format: {name type ...}
-        # Note surrounding braces are doubled to escape the brace character
-        header_string = f"{{{' '.join(list(attr_fields))}}}"
-
-        # Flatten list of identifiers into a string with each id surrounded by {}
-        id_string = ' '.join(['{' + ' '.join(i) + '}' for i in self.identifiers])
-
-        statement = f"relvar create {self.name} {header_string} {id_string}"
-        db.eval(statement)
-        self.logger.info("Created relvar")
-        result = db.eval("relvar names")
-        self.logger.info(f'Relvars in db: [{result}]')
-
         pass
+
+    @classmethod
+    def update_schema(cls, statement: str):
+        cls._schema.append(statement)
+
+    @classmethod
+    def execute(cls):
+        """
+        Executes all statements as a TclRAL relvar eval transaction
+        :return:  The TclRal success/fail result
+        """
+        cls._cmd = f"relvar eval " + "{\n    " + '\n    '.join(cls._statements) + "\n}"
+        cls._logger.info(f"Executing transaction:")
+        cls._logger.info(cls._cmd)
+        cls._result = db.eval(cls._cmd)
+        cls._logger.info(f"With result: [{cls._result}]")
+
+    @classmethod
+    def add_statement(cls, statement: str):
+        cls._statements.append(statement)

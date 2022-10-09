@@ -5,6 +5,7 @@ import logging
 from database import db
 from typing import List
 from rtypes import Attribute
+from transaction import Transaction
 
 
 class Relvar:
@@ -42,9 +43,11 @@ class Relvar:
         id_string = ' '.join(['{' + ' '.join(i) + '}' for i in self.identifiers])
 
         statement = f"relvar create {self.name} {header_string} {id_string}"
-        db.eval(statement)
-        self.logger.info("Created relvar")
-        result = db.eval("relvar names")
-        self.logger.info(f'Relvars in db: [{result}]')
+        Transaction.update_schema(statement)
+        Transaction.build_schema()
+        # db.eval(statement)
+        self.logger.info(f"Added create relvar {self.name} to transaction.")
+        # result = db.eval("relvar names")
+        # self.logger.info(f'Relvars in db: [{result}]')
 
         pass

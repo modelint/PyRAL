@@ -6,7 +6,7 @@ import logging
 import logging.config
 import database  # creates a tcl interpreter with TclRAL package
 from rtypes import Attribute
-from relvar import Relvar
+from schema import Schema
 from pathlib import Path
 from PyRAL import version
 
@@ -24,14 +24,29 @@ def test():
     logger = get_logger()
     logger.info(f'PyRAL version: {version}')
     logger.info("Starting test")
-    r = Relvar(
-        name = 'Domain',
+    Schema.add_relvar(
+        name='Domain',
         header=[
             Attribute(name='Name', type='string'),
             Attribute(name='Alias', type='string')
         ],
         identifiers=([['Name'], ['Alias']])
     )
+    Schema.add_relvar(
+        name='Modeled_Domain',
+        header=[
+            Attribute(name='Name', type='string'),
+        ],
+        identifiers=([['Name'], ])
+    )
+    Schema.add_relvar(
+        name='Realized_Domain',
+        header=[
+            Attribute(name='Name', type='string'),
+        ],
+        identifiers=([['Name'], ])
+    )
+    Schema.build()
     logger.info("No problemo")  # We didn't die on an exception, basically
 
 
