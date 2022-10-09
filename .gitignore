@@ -2,3 +2,4 @@
 /dist/
 /PyRAL.egg-info/
 *.log
+__pycache__/
