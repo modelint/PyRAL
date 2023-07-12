@@ -1,0 +1,30 @@
+[build-system]
+requires      = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyral"
+version = "0.2.0"
+description = "PyRAL Pythonic interface to TclRAL"
+readme = "README.md"
+authors = [{ name = "Leon Starr", email = "leon_starr@modelint.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["relational", "tcl", "database", "cjdate", "darwen", "tutoriald", "thirdmanifesto"]
+dependencies = ['tomli; python_version < "3.11"']
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+build = ["build", "twine"]
+dev = ["bump2version", "pytest"]
+
+[project.scripts]
+scrall = "pyral.__main__:main"
+
+[project.urls]
+repository    = "https://github.com/modelint/PyRAL"
+documentation = "https://github.com/modelint/PyRAL/wiki"
