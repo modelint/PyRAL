@@ -3,7 +3,7 @@ requires      = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyral"
+name = "mi-pyral"
 version = "0.2.0"
 description = "PyRAL Pythonic interface to TclRAL"
 readme = "README.md"
