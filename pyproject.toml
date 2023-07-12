@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 keywords = ["relational", "tcl", "database", "cjdate", "darwen", "tutoriald", "thirdmanifesto"]
-dependencies = ['tomli; python_version < "3.11"']
+dependencies = ["tabulate", 'tomli; python_version < "3.11"']
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
