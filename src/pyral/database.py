@@ -5,6 +5,7 @@ database.py - Create and manage a tclRAL database
 import logging
 import tkinter
 from pyral.transaction import Transaction
+from pathlib import Path
 
 class Database:
     """
@@ -17,6 +18,7 @@ class Database:
     _logger = logging.getLogger(__name__)
     tclRAL = None  # Tcl interpreter
     transaction = None
+    init_script_path = str(Path(__file__).parent / "tcl_scripts" / "init_TclRAL.tcl")
 
     @classmethod
     def init(cls, db_path=None):
@@ -26,7 +28,7 @@ class Database:
         """
         cls.tclRAL = tkinter.Tcl()  # Got tcl interpreter
         # Load TclRAL into that interpreter
-        cls.tclRAL.eval("source tcl_scripts/init_TclRAL.tcl")
+        cls.tclRAL.eval(f"source {cls.init_script_path}")
         cls._logger.info("TclRAL initiated")
 
         if db_path:
