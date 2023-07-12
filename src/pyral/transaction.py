@@ -2,7 +2,7 @@
 transaction.py -- Database transaction
 """
 import logging
-from exceptions import IncompleteTransactionPending, NoOpenTransaction
+from pyral.exceptions import IncompleteTransactionPending, NoOpenTransaction
 from tkinter import Tk
 
 class Transaction:

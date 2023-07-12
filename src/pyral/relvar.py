@@ -4,10 +4,10 @@ relvar.py – TclRAL operations on relvars
 
 import logging
 from typing import List, Dict, Any
-from rtypes import Attribute, Mult, delim
-from transaction import Transaction
-from command import Command
-from relation import Relation
+from pyral.rtypes import Attribute, Mult, delim
+from pyral.transaction import Transaction
+from pyral.command import Command
+from pyral.relation import Relation
 from collections import namedtuple
 from tkinter import Tk
 

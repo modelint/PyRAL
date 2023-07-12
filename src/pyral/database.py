@@ -4,7 +4,7 @@ database.py - Create and manage a tclRAL database
 
 import logging
 import tkinter
-from transaction import Transaction
+from pyral.transaction import Transaction
 
 class Database:
     """

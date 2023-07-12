@@ -6,8 +6,8 @@ import logging
 import re
 from tabulate import tabulate
 from typing import List, Optional, Dict, Tuple
-from rtypes import RelationValue
-from command import Command
+from pyral.rtypes import RelationValue
+from pyral.command import Command
 
 from tkinter import Tk
 
