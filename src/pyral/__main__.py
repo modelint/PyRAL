@@ -22,6 +22,8 @@ def get_logger():
 # Configure the expected parameters and actions for the argparse module
 def parse(cl_input):
     parser = argparse.ArgumentParser(description='PyRAL')
+    parser.add_argument('-T', '--test', action='store_true',
+                        help='Run print test'),
     parser.add_argument('-R', '--rebuild', action='store_true',
                         help='Rebuild the database.'),
     parser.add_argument('-D', '--debug', action='store_true',
@@ -42,7 +44,10 @@ def main():
     if args.version:
         # Just print the version and quit
         print(f'PyRAL version: {version}')
-        sys.exit(0)
+
+    if args.test:
+        from print_table import TableTest
+        TableTest.print_table()
 
 
     logger.info("No problemo")  # We didn't die on an exception, basically

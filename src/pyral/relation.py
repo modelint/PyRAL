@@ -307,8 +307,11 @@ class Relation:
 
         # Construct the body list
         # Each tuple is surrounded by brackets so our first stop is to split them all out into distinct tuple strings
-        body = b.split('} {')
-        body[0] = body[0].lstrip(' {')  # Remove any preceding space or brackets from the first tuple
+        # Remove leading space and enclosing brackets from entire body
+        # 2/-2 skips over leading space and first bracket and truncates final bracket surrounding body
+        body = b[2:-2].split('} {')
+        body[0] = body[0].lstrip('{')  # Remove preceding bracket from the first tuple
+
         # Each tuple alternates with the attribute name and the attribute value
         # We want to extract just the values to create the table rows
         # To complicate matters, values may contain spaces. TclRAL attribute names do not.
@@ -316,7 +319,8 @@ class Relation:
         # So you might see a tuple like this: Floor_height 32.6 Name {Lower lobby}
         # We need a regex component that will extract the bracketed space delimited values
         # As well as the non-bracketed single word values
-        value_pattern = r"([{}<>\w ]*)"  # Grab a string of any combination of brackets, word characters and spaces
+        # value_pattern = r"([{}<>\w ]*)"  # Grab a string of any combination of brackets, word characters and spaces
+        value_pattern = r"(.*)"  # Grab the whole value string. We'll strip the brackets out later.
         # Now we build this component into an alternating pattern of attribute and value items
         # for the attributes in our relation header
         tuple_pattern = ""
