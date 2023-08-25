@@ -11,6 +11,7 @@ from pyral.relation import Relation
 from collections import namedtuple
 from tkinter import Tk
 
+
 class Relvar:
     """
     A relational variable (table)
@@ -29,7 +30,7 @@ class Relvar:
         :param tclral: The TclRAL database
         :return:
         """
-        cmd = 'relvar names' # TclRAL returns all relvar names as a single string
+        cmd = 'relvar names'  # TclRAL returns all relvar names as a single string
         # strip off first '::' and then split the rest on ' ::'
         relvar_names = Command.execute(tclral, cmd).lstrip('::').split(' ::')
         if relvar_names:
@@ -38,7 +39,6 @@ class Relvar:
                 Relation.print(tclral, r)
         else:
             print("No relvars to print")
-
 
     @classmethod
     def create_association(cls, tclral: Tk, name: str,
@@ -297,7 +297,7 @@ class Relvar:
         for a in attrs:
             # We need to replace any spaces in an attribute name with underscores
             header += f"{a.name.replace(' ', delim)} {a.type.replace(' ', delim)} "
-        header = header[:-1] + "}" # Replace the trailing space with a closing bracket
+        header = header[:-1] + "}"  # Replace the trailing space with a closing bracket
 
         # Now we make the list of identifiers such as:
         #   {WPT_number} {Lat Long}
@@ -315,7 +315,7 @@ class Relvar:
         return Command.execute(tclral, cmd)
 
     @classmethod
-    def updateone(cls, tclral: Tk, relvar_name: str, id:Dict, update:Dict[str,Any]):
+    def updateone(cls, tclral: Tk, relvar_name: str, id: Dict, update: Dict[str, Any]):
         """
         Modifies in place at most one tuple of the relvar's value.
 
@@ -341,26 +341,25 @@ class Relvar:
         the single tuple that was updated or is empty if no matching tuple was found.
         """
         id_str = ""
-        for id_attr,id_val in id.items():
+        for id_attr, id_val in id.items():
             id_str += f"{id_attr} {{{id_val}}} "
         update_str = ""
-        for u_attr,u_val in update.items():
+        for u_attr, u_val in update.items():
             update_str += u_attr + " {" + u_val + "}"
         cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
         return Command.execute(tclral, cmd)
 
-
     @classmethod
-    def deleteone(cls, tclral: Tk, relvar_name: str, tid: Dict, defer:bool = False) -> str:
+    def deleteone(cls, tclral: Tk, relvar_name: str, tid: Dict, defer: bool = False) -> str:
         """
         Deletes in place at most one tuple of the relvar's value.
 
         TclRAL syntax:
-            relvar updateone <relvarName> <tupleVarName> <id-name-value-list> <script>
+            relvar deleteone <relvarName> <tupleVarName> <id-name-value-list> <script>
 
         Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute updated:
         The TclRAL command (all on one line, but idented for readability here) is:
-            relvar updateone Attribute t
+            relvar deleteone Attribute t
                 {Name {Floor} Class {Accessible Shaft Level} Domain {Elevator Management} }
                 {tuple update $t Type {Level Name}}
 
@@ -371,6 +370,7 @@ class Relvar:
         :param tclral: The tclRAL session
         :param relvar_name: The relvar to be deleted
         :param tid: Identifier value for the tuple to be deleted
+        :param defer: If true, appended to open transaction, otherwise execute now and return result
         :return: A relation value with the same heading as the value held in relvarName and whose body contains either
         the single tuple that was updated or is empty if no matching tuple was found.
         """
