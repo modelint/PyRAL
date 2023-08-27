@@ -18,7 +18,7 @@ from tkinter import Tk
 # For any given command, if no relvar is specified, the previous relation result is assumed
 # to be the input.
 _relation = r'^relation'  # Name of the latest relation result. Carat prevents name collision
-session_variable_names = set() # Maintain a list of temporary variable names in use
+session_variable_names = set()  # Maintain a list of temporary variable names in use
 
 
 class Relation:
@@ -58,7 +58,7 @@ class Relation:
         attr_vals = {a[0].strip(): a[1].strip() for a in [m.split(':') for m in match_strings]}
         # Now build the selection expression from each dictionary item
         sexpr = "{"  # Selection expression is surrounded by brackets
-        for attribute,value in attr_vals.items():
+        for attribute, value in attr_vals.items():
             # We AND them all together with the && tcl operator
             sexpr += f"[string match {{{value}}} ${attribute}] && "
         # Remove the trailing && and return the complete selection expression
@@ -85,13 +85,13 @@ class Relation:
         :return:
         """
         attr_list = "{"
-        for k,v in attrs.items():
+        for k, v in attrs.items():
             attr_list += f"{k} {v} "
         return attr_list[:-1] + "}"
 
     @classmethod
-    def join(cls, tclral: Tk, rname2: str, rname1: str=_relation, attrs: Dict[str, str]={},
-             svar_name: Optional[str]=None) -> str:
+    def join(cls, tclral: Tk, rname2: str, rname1: str = _relation, attrs: Dict[str, str] = {},
+             svar_name: Optional[str] = None) -> str:
         """
         Perform a natural join on two relations using an optional attribute mapping. If no attributes are specified,
         the join is performed on same named attributes.
@@ -113,27 +113,8 @@ class Relation:
         return result
 
     @classmethod
-    def project(cls, tclral: Tk, attributes: List[str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
-        """
-        Returns a relation whose heading consists of only a set of selected attributes.
-        The body of the result consists of the corresponding tuples from the specified relation,
-        removing any duplicates created by considering only a subset of the attributes.
-
-        :param tclral: The TclRAL session
-        :param attributes: Attributes to be projected
-        :param relation: The relation to be projected
-        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
-        :return Resulting relation as a TclRAL string
-        """
-        projection = ' '.join(attributes)
-        cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
-        result = Command.execute(tclral, cmd)
-        if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
-        return result
-
-    @classmethod
-    def rename(cls, tclral: Tk, names: Dict[str, str], relation: str=_relation, svar_name: Optional[str]=None) -> str:
+    def rename(cls, tclral: Tk, names: Dict[str, str], relation: str = _relation,
+               svar_name: Optional[str] = None) -> str:
         """
         (NOTE: I only just NOW realized that the TclRAL join command provides an option to specify multiple renames
         as part of a join, because, of course it does! Argghh. So there may not be any need to perform multiple renames
@@ -172,64 +153,17 @@ class Relation:
         r = relation
         result = None
         # Each attribute rename is executed with a separate command
-        for old_name,new_name in names.items():
+        for old_name, new_name in names.items():
             # The first rename operation is on the supplied relation
             cmd = f'set {_relation} [relation rename ${{{r}}} {old_name} {new_name}]'
             result = Command.execute(tclral, cmd)
-            r = _relation # Subsequent renames are based on the previous result
+            r = _relation  # Subsequent renames are based on the previous result
         if svar_name:  # Save the final result using the supplied session variable name
             cls.set_var(tclral, svar_name)
-        return result # Result of the final rename (all renames in place)
+        return result  # Result of the final rename (all renames in place)
 
     @classmethod
-    def restrict(cls, tclral: Tk, restriction: str, relation: str=_relation, svar_name: Optional[str]=None) -> str:
-        """
-        Here we select zero or more tuples that match the supplied criteria.
-
-        In relational theory this is known as a restriction operation.
-
-        TclRAL syntax:
-            relation restrict <relationValue> <tupleVariable> <expression>
-
-        TclRAL command example:
-            relation restrict ${Attribute} t {[string match {<unresolved>} [tuple extract $t Type]] &&
-                [string match {Elevator Management} [tuple extract $t Domain]]}
-
-        Generated from this PyRAL input:
-            relation: Attribute
-            restriction: 'Type:<unresolved>, Domain:Elevator Management'
-
-
-        :param tclral: The TclRAL session
-        :param relation: Name of a relation variable where the operation is applied
-        :param restriction: A string in Scrall notation that specifies the restriction criteria
-        :param svar_name: An optional session variable that holds the result
-        :return: The TclRAL string result representing the restricted tuple set
-        """
-        # Parse the restriction expression
-        # Split out matches on comma delimiter as a list of strings
-        match_strings = restriction.split(',')
-        # Break each match on the ':' into attr and value as a dictionary
-        attr_vals = {a[0].strip(): a[1].strip() for a in [m.split(':') for m in match_strings]}
-        # Now build the selection expression from each dictionary item
-        rexpr = "{"  # Selection expression is surrounded by brackets
-        for attribute,value in attr_vals.items():
-            # We AND them all together with the && tcl operator
-            rexpr += f"[string match {{{value}}} [tuple extract $t {attribute}]] && " # For use with restrict command
-            # rexpr += f"[string match {{{value}}} ${attribute}] && " # For use with restrictwith command
-        # Remove the trailing && and return the complete selection expression
-        rexpr = rexpr.rstrip(' &&') + "}"
-
-        # Add it to the restrictwith command and evaluate
-        # result = tclral.eval("relation restrict $Attribute a {[string match <unresolved> [tuple extract $a Type]]}")
-        cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
-        result = Command.execute(tclral, cmd)
-        if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
-        return result
-
-    @classmethod
-    def subtract(cls, tclral: Tk, rname2: str, rname1: str=_relation, svar_name: Optional[str]=None) -> str:
+    def subtract(cls, tclral: Tk, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None) -> str:
         """
         Returns the set difference between two relations using the TclRAL minus command.
 
@@ -265,7 +199,7 @@ class Relation:
         return result
 
     @classmethod
-    def get_rval_string(cls, tclral: Tk, variable_name:str) -> str:
+    def get_rval_string(cls, tclral: Tk, variable_name: str) -> str:
         """
         Obtain a relation from a TclRAL variable
 
@@ -276,7 +210,7 @@ class Relation:
         return Command.execute(tclral, cmd=f"set {variable_name}")
 
     @classmethod
-    def make_pyrel(cls, relation: str, name: str=_relation ) -> RelationValue:
+    def make_pyrel(cls, relation: str, name: str = _relation) -> RelationValue:
         """
         Take a relation obtained from TclRAL and convert it into a pythonic relation value.
         A RelationValue is a named tuple with a header and a body component.
@@ -355,7 +289,7 @@ class Relation:
         return rval
 
     @classmethod
-    def print(cls, tclral: 'Tk', variable_name: str=_relation, table_name:Optional[str]=None):
+    def print(cls, tclral: 'Tk', variable_name: str = _relation, table_name: Optional[str] = None):
         """
         Given the name of a TclRAL relation variable, obtain its value and print it as a table.
 
@@ -381,51 +315,12 @@ class Relation:
         print(f"\n-- {tablename} --")
         attr_names = list(rval.header.keys())
         brows = [list(row.values()) for row in rval.body]
-        print(tabulate(tabular_data=brows, headers=attr_names, tablefmt="outline"))  # That last parameter chooses our table style
+        print(tabulate(tabular_data=brows, headers=attr_names,
+                       tablefmt="outline"))  # That last parameter chooses our table style
 
     @classmethod
-    def restrict2(cls, tclral: Tk, restriction: str, relation: str = _relation,
-                  svar_name: Optional[str] = None) -> RelationValue:
-        """
-        Here we select zero or more tuples that match the supplied criteria.
-
-        In relational theory this is known as a restriction operation.
-
-        TclRAL syntax:
-            relation restrict <relationValue> <tupleVariable> <expression>
-
-        TclRAL command example:
-            relation restrict ${Attribute} t {[string match {<unresolved>} [tuple extract $t Type]] &&
-                [string match {Elevator Management} [tuple extract $t Domain]]}
-
-        Generated from this PyRAL input:
-            relation: Attribute
-            restriction: 'Type:<unresolved>, Domain:Elevator Management'
-
-
-        :param tclral: The TclRAL session
-        :param relation: Name of a relation variable where the operation is applied
-        :param restriction: A string in Scrall notation that specifies the restriction criteria
-        :param svar_name: An optional session variable that holds the result
-        :return: The TclRAL string result representing the restricted tuple set
-        """
-        # setr = re.sub(r'', r'', restriction)
-        # Replace square brackets and logic ops with tcl equivalents
-        restrict_tcl = restriction.replace('[', '{').replace(']', '}').\
-            replace(' OR ', ' || ').replace(', ', ' && ').replace(' AND ', ' && ').replace('NOT ', '!')
-        # Now process ':' attr:value match pairs with tcl string match expressions and wrap with tcl braces
-        rexpr = '{' + re.sub(r'([\w_]*):({[\w ]*})', r'[string match \2 [tuple extract $t \1]]', restrict_tcl) + '}'
-
-        # Insert it in the tlcral relation restrict command and execute
-        cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
-        result = Command.execute(tclral, cmd)
-        if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
-        return cls.make_pyrel(result)
-
-    @classmethod
-    def project2(cls, tclral: Tk, attributes: Tuple[str, ...], relation: str=_relation,
-                 svar_name: Optional[str]=None) -> RelationValue:
+    def project(cls, tclral: Tk, attributes: Tuple[str, ...], relation: str = _relation,
+                svar_name: Optional[str] = None) -> RelationValue:
         """
         Returns a relation whose heading consists of only a set of selected attributes.
         The body of the result consists of the corresponding tuples from the specified relation,
@@ -445,16 +340,17 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def make_comparison(cls, attr_name:str, values: set | str) -> str:
+    def make_comparison(cls, attr_name: str, values: set | str) -> str:
         if isinstance(values, set):
             vmatch = [f"[string match {{{v}}} [tuple extract $t {attr_name}]]" for v in values]
             return '(' + ' || '.join(vmatch) + ')'
 
         # There's only one value
         return f"[string match {{{values}}} [tuple extract $t {attr_name}]]"
+
     @classmethod
-    def restrict3(cls, tclral: Tk, restriction: str, relation: str = _relation,
-                  svar_name: Optional[str] = None) -> RelationValue:
+    def restrict(cls, tclral: Tk, restriction: str, relation: str = _relation,
+                 svar_name: Optional[str] = None) -> RelationValue:
         """
         Here we select zero or more tuples that match the supplied criteria.
 

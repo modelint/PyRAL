@@ -47,7 +47,7 @@ def main():
 
     if args.test:
         from print_table import TableTest
-        TableTest.print_table()
+        TableTest.do_r()
 
 
     logger.info("No problemo")  # We didn't die on an exception, basically
