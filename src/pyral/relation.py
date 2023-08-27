@@ -91,7 +91,7 @@ class Relation:
 
     @classmethod
     def join(cls, tclral: Tk, rname2: str, rname1: str = _relation, attrs: Dict[str, str] = {},
-             svar_name: Optional[str] = None) -> str:
+             svar_name: Optional[str] = None) -> RelationValue:
         """
         Perform a natural join on two relations using an optional attribute mapping. If no attributes are specified,
         the join is performed on same named attributes.
@@ -110,11 +110,11 @@ class Relation:
         result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(tclral, svar_name)
-        return result
+        return cls.make_pyrel(result)
 
     @classmethod
     def rename(cls, tclral: Tk, names: Dict[str, str], relation: str = _relation,
-               svar_name: Optional[str] = None) -> str:
+               svar_name: Optional[str] = None) -> RelationValue:
         """
         (NOTE: I only just NOW realized that the TclRAL join command provides an option to specify multiple renames
         as part of a join, because, of course it does! Argghh. So there may not be any need to perform multiple renames
@@ -160,10 +160,63 @@ class Relation:
             r = _relation  # Subsequent renames are based on the previous result
         if svar_name:  # Save the final result using the supplied session variable name
             cls.set_var(tclral, svar_name)
-        return result  # Result of the final rename (all renames in place)
+        return cls.make_pyrel(result)  # Result of the final rename (all renames in place)
 
     @classmethod
-    def subtract(cls, tclral: Tk, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None) -> str:
+    def intersect(cls, tclral: Tk, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None
+                 ) -> RelationValue:
+        """
+        Returns the intersection of two relations using the TclRAL intersect command.
+
+        Each relation must be of the same type (same header) as will the result.
+
+        The body of the result consists of those tuples present in both r1 and r2.
+
+        Relational intersection is commutative so the order of the r1 and r2 arguments is not significant.
+
+        The TclRAL syntax is:
+            relation intersect <relationValue1> <relationValue2>
+
+        :param tclral: The TclRAL session
+        :param rname1:
+        :param rname2:
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Subtraction relation as a TclRAL string
+        """
+        cmd = f'set {_relation} [relation intersect ${{{rname1}}} ${rname2}]'
+        result = Command.execute(tclral, cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(tclral, svar_name)
+        return cls.make_pyrel(result)
+
+    @classmethod
+    def compare(cls, tclral: Tk, op: str, rname2: str, rname1: str = _relation) -> bool:
+        """
+        Returns the intersection of two relations using the TclRAL intersect command.
+
+        Each relation must be of the same type (same header) as will the result.
+
+        The body of the result consists of those tuples present in both r1 and r2.
+
+        Relational intersection is commutative so the order of the r1 and r2 arguments is not significant.
+
+        The TclRAL syntax is:
+            relation intersect <relationValue1> <relationValue2>
+
+        :param tclral: The TclRAL session
+        :param op:  Comparision operation
+        :param rname1:
+        :param rname2:
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Subtraction relation as a TclRAL string
+        """
+        cmd = f'relation is ${{{rname1}}} {op} ${rname2}'
+        result = bool(int(Command.execute(tclral, cmd)))
+        return result
+
+    @classmethod
+    def subtract(cls, tclral: Tk, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None
+                 ) -> RelationValue:
         """
         Returns the set difference between two relations using the TclRAL minus command.
 
@@ -196,7 +249,7 @@ class Relation:
         result = Command.execute(tclral, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(tclral, svar_name)
-        return result
+        return cls.make_pyrel(result)
 
     @classmethod
     def get_rval_string(cls, tclral: Tk, variable_name: str) -> str:
