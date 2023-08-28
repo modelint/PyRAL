@@ -3,11 +3,11 @@ relvar.py – TclRAL operations on relvars
 """
 
 import logging
-from typing import List, Dict, Any
-from pyral.rtypes import Attribute, Mult, delim
+from typing import List, Dict, Any, Optional
+from pyral.rtypes import Attribute, Mult, delim, RelationValue
 from pyral.transaction import Transaction
 from pyral.command import Command
-from pyral.relation import Relation
+from pyral.relation import Relation, _relation
 from collections import namedtuple
 from tkinter import Tk
 
@@ -383,3 +383,39 @@ class Relvar:
         else:
             Transaction.append_statement(statement=cmd)
             return ''
+
+
+    @classmethod
+    def select_id(cls, tclral: Tk, relvar_name: str, tid: Dict, svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Deletes in place at most one tuple of the relvar's value.
+
+        TclRAL syntax:
+            relvar deleteone <relvarName> <tupleVarName> <id-name-value-list> <script>
+
+        Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute updated:
+        The TclRAL command (all on one line, but idented for readability here) is:
+            relvar deleteone Attribute t
+                {Name {Floor} Class {Accessible Shaft Level} Domain {Elevator Management} }
+                {tuple update $t Type {Level Name}}
+
+        Generated from the PyRAL:
+            relvar_name: 'Attribute'
+            tid: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
+
+        :param svar_name:
+        :param tclral: The tclRAL session
+        :param relvar_name: The relvar to be deleted
+        :param tid: Identifier value for the tuple to be deleted
+        :param defer: If true, appended to open transaction, otherwise execute now and return result
+        :return: A relation value with the same heading as the value held in relvarName and whose body contains either
+        the single tuple that was updated or is empty if no matching tuple was found.
+        """
+        id_str = ""
+        for id_attr, id_val in tid.items():
+            id_str += f"{id_attr} {{{id_val}}} "
+        cmd = f'set {_relation} [relvar restrictone {relvar_name} {id_str}]'
+        result = Command.execute(tclral, cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            Relation.set_var(tclral, svar_name)
+        return Relation.make_pyrel(result, name=svar_name)

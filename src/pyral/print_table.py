@@ -36,6 +36,9 @@ class TableTest:
         Relation.print(db, "Aircraft")
         Relation.print(db, "Pilot")
 
+        aone = Relvar.select_id(db, 'Aircraft', {'Tailnumber': '1397Q'}, svar_name='One')
+        Relation.relformat(aone)
+
         # result = Relation.join(db, rname1='Pilot', rname2='Aircraft')
         #
         # # result = Relation.project(db, attributes=('Age',), relation='Pilot')
@@ -49,13 +52,13 @@ class TableTest:
         Relation.print(db, 'high')
         db.eval('set low [relation restrict $Aircraft t {[tuple extract $t Altitude] < 13000}]' )
         Relation.print(db, 'low')
-
+        #
         b = Relation.intersect(db, rname2='high', rname1='low')
         Relation.relformat(b)
-
+        #
         # thesame = db.eval('relation is $Aircraft != $Aircraft')
         # print(thesame)
-
+        #
         thesame = Relation.compare(db, op='<=', rname1='Aircraft', rname2='Aircraft')
         print(thesame)
 
