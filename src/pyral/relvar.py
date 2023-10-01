@@ -12,6 +12,7 @@ from collections import namedtuple
 
 _logger = logging.getLogger(__name__)
 
+
 class Relvar:
     """
     A relational variable (table)
@@ -173,21 +174,12 @@ class Relvar:
         Database.execute(db, cmd=verify_cmd)
 
     @classmethod
-    def insert(cls, relvar: str, tuples: List[namedtuple]):
+    def insert(cls, db: str, relvar: str, tuples: List[namedtuple], tr_name: str = None):
         """
-        Specifies the insert of a set of tuples into the value of the relvar, modifying it in place.
+        Insert a set of tuples into the value of a relvar, modifying it in place.
 
-        Rather than execute the insert operation immediately, it is added as a statement to the currently
-        open transaction. The Transaction append operation will raise an exception if no
-        transaction is currently open.
-
-        It is often the case that a set of inserts must be executed together as a transaction
-        so that relvar constraints may be checked. For example, an SM xUML super and subclass insert must
-        be applied as a single transaction. In cases where a single, standalone insert will suffice,
-        it is simply wrapped as a single statement transaction for simplicity.
-
-        TclRAL does not require that a single insert be embedded in an explicit transaction so,
-        in the future, a standalone insert may be supported by PyRAL.
+        The tuples are concatenated into a single command that is either executed immediately
+        or added to an open transaction if tr_name is provided.
 
         The TclRAL syntax is:
             relvar insert <relvarName> ?<name-value-list> ...?
@@ -199,14 +191,17 @@ class Relvar:
             relvar: 'Class'
             tuples: [ Class_i(Name='Accessible Shaft Level', Cnum='C1', Domain='Elevator Management') ]
 
-
-        Note that the emtpy set may be provided which results in a no-op.
+        Note that the emtpy set may be provided in the TclRAL command which results in a no-op.
         PyRAL supports this feature by allowing an empty list of tuples to be specified
 
+        :param db: DB session name
         :param relvar: The name of an existing relvar
         :param tuples: A list of tuples named such that the attributes exactly match the relvar header
+        :param tr_name:  Optional transaction name, add to this transaction if supplied
         """
+        # Start command with the relvar command prefix
         cmd = f"relvar insert {relvar} "
+        # Add in all of the tuples
         for t in tuples:
             cmd += '{'
             instance_tuple = t._asdict()
@@ -214,7 +209,12 @@ class Relvar:
                 cmd += f"{k} {{{v}}} "  # Spaces are allowed in values
             cmd = cmd[:-1] + '} '
         cmd = cmd[:-1]
-        Transaction.append_statement(statement=cmd)
+
+        # Add to open transaction if tr_name is provided
+        if tr_name:
+            Transaction.append_statement(db, name=tr_name, statement=cmd)
+        else:
+            Database.execute(db, cmd)
 
     @classmethod
     def create_partition(cls, db: str, name: str,
@@ -382,7 +382,6 @@ class Relvar:
             Transaction.append_statement(statement=cmd)
             return ''
 
-
     @classmethod
     def select_id(cls, db: str, relvar_name: str, tid: Dict, svar_name: Optional[str] = None) -> RelationValue:
         """
@@ -405,7 +404,6 @@ class Relvar:
         :param svar_name:
         :param relvar_name: The relvar to be deleted
         :param tid: Identifier value for the tuple to be deleted
-        :param defer: If true, appended to open transaction, otherwise execute now and return result
         :return: A relation value with the same heading as the value held in relvarName and whose body contains either
         the single tuple that was updated or is empty if no matching tuple was found.
         """

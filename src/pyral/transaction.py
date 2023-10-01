@@ -3,7 +3,7 @@ transaction.py -- Database transaction
 """
 import logging
 from pyral.exceptions import IncompleteTransactionPending, NoOpenTransaction, UnNamedTransaction, PyRALException
-from database import Database
+from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
 
