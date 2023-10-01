@@ -4,13 +4,13 @@ relvar.py – TclRAL operations on relvars
 
 import logging
 from typing import List, Dict, Any, Optional
-from pyral.rtypes import Attribute, Mult, delim, RelationValue
+from pyral.database import Database
 from pyral.transaction import Transaction
-from pyral.command import Command
 from pyral.relation import Relation, _relation
+from pyral.rtypes import Attribute, Mult, delim, RelationValue
 from collections import namedtuple
-from tkinter import Tk
 
+_logger = logging.getLogger(__name__)
 
 class Relvar:
     """
@@ -19,29 +19,27 @@ class Relvar:
     TclRAL does not support spaces in names, but PyRAL accepts space delimited names.
     But each space delimiter will be replaced with an underscore delimiter before submitting to TclRAL
     """
-    _logger = logging.getLogger(__name__)
 
     # TclRAL commands organized in alphabetic order to match the TclRAL man pages
     @classmethod
-    def printall(cls, tclral: Tk):
+    def printall(cls, db: str):
         """
         Print out all relvar relations in the tclRAL database in alphabetic order
 
-        :param tclral: The TclRAL database
-        :return:
+        :param db: DB session name
         """
         cmd = 'relvar names'  # TclRAL returns all relvar names as a single string
         # strip off first '::' and then split the rest on ' ::'
-        relvar_names = Command.execute(tclral, cmd).lstrip('::').split(' ::')
+        relvar_names = Database.execute(db, cmd).lstrip('::').split(' ::')
         if relvar_names:
             relvar_names.sort()
             for r in relvar_names:
-                Relation.print(tclral, r)
+                Relation.print(db, r)
         else:
             print("No relvars to print")
 
     @classmethod
-    def create_association(cls, tclral: Tk, name: str,
+    def create_association(cls, db: str, name: str,
                            from_relvar: str, from_attrs: List[str], from_mult: Mult,
                            to_relvar: str, to_attrs: List[str], to_mult: Mult,
                            ):
@@ -64,7 +62,7 @@ class Relvar:
             Mc - zero or more
             1c - zero or one
 
-        :param tclral: The tclRAL session
+        :param db: DB session name
         :param name: Name of the association, an association Rnum in SM xUML
         :param from_relvar: The referring relvar (source)
         :param from_attrs: The referential attributes in the source relvar
@@ -82,13 +80,13 @@ class Relvar:
               f" {to_relvar} {to_attr_str} {to_mult.value}"
 
         # Execute the command and ignore the result
-        Command.execute(tclral, cmd=cmd, log=False)
+        Database.execute(db, cmd=cmd, log=False)
         # Verify and log the constraint by executing the TclRAL constraint command
         verify_cmd = f"relvar constraint info {name}"
-        Command.execute(tclral, cmd=verify_cmd)
+        Database.execute(db, cmd=verify_cmd)
 
     @classmethod
-    def create_correlation(cls, tclral: Tk, name: str, correlation_relvar: str,
+    def create_correlation(cls, db: str, name: str, correlation_relvar: str,
                            correl_a_attrs: List[str], a_mult: Mult, a_relvar: str, a_ref_attrs: List[str],
                            correl_b_attrs: List[str], b_mult: Mult, b_relvar: str, b_ref_attrs: List[str],
                            complete: bool = False):
@@ -138,7 +136,7 @@ class Relvar:
                     {Identifier Class Domain} + Identifier
                     {Number Class Domain} {Attribute Class Domain} * Attribute {Name Class Domain}
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param name: Name of the correlation
         :param correlation_relvar: Name of the relvar holding the correlation
         :param correl_a_attrs: Attrs in correlation relvar referencing a-side relvar
@@ -169,10 +167,10 @@ class Relvar:
               f"{correl_b_attrs_str} {a_mult.value} {b_relvar} {b_ref_attrs_str}"
 
         # Execute the command and log the result
-        Command.execute(tclral, cmd=cmd, log=False)
+        Database.execute(db, cmd=cmd, log=False)
         # Verify and log the constraint by executing the TclRAL constraint command
         verify_cmd = f"relvar constraint info {name}"
-        Command.execute(tclral, cmd=verify_cmd)
+        Database.execute(db, cmd=verify_cmd)
 
     @classmethod
     def insert(cls, relvar: str, tuples: List[namedtuple]):
@@ -219,7 +217,7 @@ class Relvar:
         Transaction.append_statement(statement=cmd)
 
     @classmethod
-    def create_partition(cls, tclral: Tk, name: str,
+    def create_partition(cls, db: str, name: str,
                          superclass_name: str, super_attrs: List[str], subs: Dict[str, List[str]]):
         """
         A partition is defined such that the set of tuples in a super relvar is referenced by
@@ -251,7 +249,7 @@ class Relvar:
         In the above examples both Relationship.Rnum and Class.Cnum refer to the Subsystem Element.Label
         attribute. So the ordering of identifier attributes for each relvar is significant.
 
-        :param tclral: The tclRAL session
+        :param db: DB session name
         :param name: Name of the partition, a generalizaiton rnum in SM xUML
         :param superclass_name: Name of the superclass relvar
         :param super_attrs: A list of attributes constituting an identifier of the superclass referenced by
@@ -265,13 +263,13 @@ class Relvar:
 
         cmd = f"relvar partition {name} {superclass_name} {super_attrs_str} {all_subs}"
         # Execute the command and log the result
-        Command.execute(tclral, cmd=cmd, log=False)
+        Database.execute(db, cmd=cmd, log=False)
         # Verify and log the constraint by executing the TclRAL constraint command
         verify_cmd = f"relvar constraint info {name}"
-        Command.execute(tclral, cmd=verify_cmd)
+        Database.execute(db, cmd=verify_cmd)
 
     @classmethod
-    def create_relvar(cls, tclral: Tk, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]) -> str:
+    def create_relvar(cls, db: str, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]) -> str:
         """
         Create a relvar
 
@@ -285,7 +283,7 @@ class Relvar:
         We wrap each identifier in {} brackets for simplicity even though we only really need them to group
         multiple attribute identifiers
 
-        :param tclral: A TclRAL session
+        :param db: DB session name
         :param name: Name of the new relvar
         :param attrs: A list of Attributes (name, type - named tuples)
         :param ids: A dictionary of {idnum: [attr_name, ...] } values
@@ -312,10 +310,10 @@ class Relvar:
 
         # Build and execute the TclRAL command
         cmd = f"relvar create {name} {header} {id_list}"
-        return Command.execute(tclral, cmd)
+        return Database.execute(db, cmd)
 
     @classmethod
-    def updateone(cls, tclral: Tk, relvar_name: str, id: Dict, update: Dict[str, Any]):
+    def updateone(cls, db: str, relvar_name: str, id: Dict, update: Dict[str, Any]):
         """
         Modifies in place at most one tuple of the relvar's value.
 
@@ -333,7 +331,7 @@ class Relvar:
             id: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
             update: {'Type': 'Level Name'}
 
-        :param tclral: The tclRAL session
+        :param db: DB session name
         :param relvar_name: The relvar to be updated
         :param id: Identifier value for the tuple to be updated
         :param update: A dictionary of attribute value pairs whose values will be applied
@@ -347,10 +345,10 @@ class Relvar:
         for u_attr, u_val in update.items():
             update_str += u_attr + " {" + u_val + "}"
         cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
-        return Command.execute(tclral, cmd)
+        return Database.execute(db, cmd)
 
     @classmethod
-    def deleteone(cls, tclral: Tk, relvar_name: str, tid: Dict, defer: bool = False) -> str:
+    def deleteone(cls, db: str, relvar_name: str, tid: Dict, defer: bool = False) -> str:
         """
         Deletes in place at most one tuple of the relvar's value.
 
@@ -367,7 +365,7 @@ class Relvar:
             relvar_name: 'Attribute'
             tid: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
 
-        :param tclral: The tclRAL session
+        :param db: DB session name
         :param relvar_name: The relvar to be deleted
         :param tid: Identifier value for the tuple to be deleted
         :param defer: If true, appended to open transaction, otherwise execute now and return result
@@ -379,14 +377,14 @@ class Relvar:
             id_str += f"{id_attr} {{{id_val}}} "
         cmd = f'relvar deleteone {relvar_name} {id_str}'
         if not defer:
-            return Command.execute(tclral, cmd)
+            return Database.execute(db, cmd)
         else:
             Transaction.append_statement(statement=cmd)
             return ''
 
 
     @classmethod
-    def select_id(cls, tclral: Tk, relvar_name: str, tid: Dict, svar_name: Optional[str] = None) -> RelationValue:
+    def select_id(cls, db: str, relvar_name: str, tid: Dict, svar_name: Optional[str] = None) -> RelationValue:
         """
         Deletes in place at most one tuple of the relvar's value.
 
@@ -403,8 +401,8 @@ class Relvar:
             relvar_name: 'Attribute'
             tid: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
 
+        :param db: DB session name
         :param svar_name:
-        :param tclral: The tclRAL session
         :param relvar_name: The relvar to be deleted
         :param tid: Identifier value for the tuple to be deleted
         :param defer: If true, appended to open transaction, otherwise execute now and return result
@@ -415,7 +413,7 @@ class Relvar:
         for id_attr, id_val in tid.items():
             id_str += f"{id_attr} {{{id_val}}} "
         cmd = f'set {_relation} [relvar restrictone {relvar_name} {id_str}]'
-        result = Command.execute(tclral, cmd)
+        result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            Relation.set_var(tclral, svar_name)
+            Relation.set_var(db, svar_name)
         return Relation.make_pyrel(result, name=svar_name)

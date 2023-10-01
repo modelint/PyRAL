@@ -1,10 +1,10 @@
 """
-database.py - Create and manage one or more tclRAL databases
+database.py - Create and manage a set of tclRAL databases
 """
 
 import logging
-from tkinter import Tcl, Tk
-from exceptions import PyRALException
+from tkinter import Tcl, Tk, TclError
+from exceptions import PyRALException, TclRALException
 from pathlib import Path
 
 _logger = logging.getLogger(__name__)
@@ -17,7 +17,9 @@ class Database:
     by importing Andrew Mangogna's TclRAL packages.
 
     These packages must have been compiled for your platform and placed in the directory
-    assigned to the ral_lib_path below.
+    assigned to the ral_lib_path below. Consult Andrew's Model Realization repository for
+    the latest files.  The most recent link should appear in the github wiki for the PyRAL
+    repository or in the readme.
 
     A PyRAL session can then be operated on with PyRAL commands that ultimately resolve into
     TclRAL commands evalued by the associated tcl interpreter object.
@@ -89,6 +91,7 @@ class Database:
             cls.sessions[db].eval(f"serializeToFile {fname}")
         except KeyError:
             _logger.error(f"Session [{db}] not open")
+            raise PyRALException
 
     @classmethod
     def load(cls, db: str, fname: str):
@@ -102,7 +105,32 @@ class Database:
             cls.sessions[db].eval(f"deserializeFromFile {fname}")
         except KeyError:
             _logger.error(f"Session [{db}] not open")
+            raise PyRALException
 
+    @classmethod
+    def execute(cls, db: str, cmd: str, log: bool = True) -> str:
+        """
+        Executes a TclRAL command via the supplied session and returns TclRAL's string result.
+
+        :param db: The DB session
+        :param cmd: A TclRAL command string
+        :param log:  If false, the result will not be logged. Useful when no meaningful result is expected
+        :return: The string received as a result of executing the command
+        """
+        _logger.info(f"cmd: {cmd}")
+        try:
+            result = cls.sessions[db].eval(cmd)
+        except KeyError:
+            _logger.error(f"Database {db} is not open")
+            raise PyRALException
+        except TclError as e:
+            _logger.error(f"TclRAL error in db [{db}] on command: [{cmd}]")
+            _logger.exception(e)
+            raise TclRALException
+
+        if log:
+            _logger.info(f"result: {result}")
+        return result
     @classmethod
     def names(cls, db: str, pattern: str = ""):
         """
@@ -115,6 +143,7 @@ class Database:
             result = cls.sessions[db].eval(f"relvar names {pattern}")
         except KeyError:
             _logger.error(f"Session [{db}] not open")
+            raise PyRALException
 
         _logger.info(f"Names in sesssion [{db}] using pattern [{pattern}]")
         _logger.info(result)
@@ -131,6 +160,7 @@ class Database:
             result = cls.sessions[db].eval(f"relvar constraint names {pattern}")
         except KeyError:
             _logger.error(f"Session [{db}] not open")
+            raise PyRALException
 
         _logger.info(f"Constraints and names in sesssion [{db}] using pattern [{pattern}]")
         _logger.info(result)

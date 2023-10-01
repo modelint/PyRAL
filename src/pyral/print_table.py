@@ -23,7 +23,7 @@ class TableTest:
     @classmethod
     def do_r(cls):
 
-        db = Database.open_session("do_test")
+        db = Database.open_session("")
         Relvar.create_relvar(db, name='Aircraft',
                              attrs=[Attribute('Tailnumber', 'string'), Attribute('Altitude', 'int'),
                                     Attribute('Heading', 'int')], ids={1: ['Tailnumber']})
