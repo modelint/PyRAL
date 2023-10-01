@@ -2,8 +2,8 @@
 transaction.py -- Database transaction
 """
 import logging
-from pyral.exceptions import IncompleteTransactionPending, NoOpenTransaction, UnNamedTransaction
-from tkinter import Tk
+from pyral.exceptions import IncompleteTransactionPending, NoOpenTransaction, UnNamedTransaction, PyRALException
+from database import Database
 
 _logger = logging.getLogger(__name__)
 
@@ -13,67 +13,76 @@ class Transaction:
 
     """
     pending = {}
-    _statements = None
-    _cmd = ""
-    _result = None
-    _schema = []
-    _tclral = None
-
-    # def __init__(self, tclral: Tk, name: str):
-    #     self.name = name
-    #     self.tclral = tclral
-    #     self.statements = []
-    #
-    #     if not name:
-    #         _logger.error(f"Cannot open transaction with an empty string name")
-    #         raise UnNamedTransaction
-    #
-    #     if name in Transaction.pending:
-    #
-    #
-    #     _logger.info(f"PYRAL TR [{name}] OPEN")
-    #
-    # def open(self):
-    #
 
     @classmethod
-    def open(cls, tclral: Tk, name: str):
+    def open(cls, db: str, name: str):
         """
         Starts a new empty transaction by ensuring that there are no statements
+
+        :param db: The DB session
+        :param name: The name of this transaction, must be unique for the db
         """
-        # TODO: As it stands, only one Transaction is open for all potential tclral instances.
-        # TODO: We should make the class methods instance based and tie each instance of Transaction to a single
-        # TODO: TclRAL session. (For now it works since we aren't yet opening multiple TclRAL sessions simultaneously.
-        _logger.info(f"PYRAL TR OPEN")
-        cls._tclral = tclral
-        if cls._statements:
-            _logger.error(f"New transaction opened before closing previous.")
+        # Verify that the name is not an empty string
+        if not name:
+            _logger.error(f"No transaction name provided on open for db [{db}]")
+            raise UnNamedTransaction
+
+        # Verify that the transaction is not already open
+        if name in db:
+            _logger.error(f"Transaction {name} already pending for db [{db}]")
             raise IncompleteTransactionPending
-        cls._statements = []
+
+        # Create a new empty tranaction
+        cls.pending[db] = {name: []}
 
     @classmethod
-    def append_statement(cls, statement: str):
+    def append_statement(cls, db: str, name: str, statement: str):
         """
         Adds a statement to the list of pending statements in the open transaction.
 
+        :param db: The DB session
+        :param name: The name of the transaction
         :param statement:  Statement to be appended
         """
-        if not isinstance(cls._statements, list):
-            _logger.exception("Statement append when no transaction is open.")
+        # Ensure that the statement is not empty
+        if not statement:
+            _logger.error(f"No statement provided on append to transaction [{name}] for db [{db}]")
+            raise PyRALException
+
+        # Verify that the transaction is pending
+        if db not in cls.pending:
+            _logger.error(f"No open db session: [{db}]")
+            raise PyRALException
+
+        # Append the statement to the pending transaction
+        try:
+            cls.pending[db][name].append(statement)
+        except KeyError:
+            _logger.error(f"No transaction [{name}] open on db [{db}]")
             raise NoOpenTransaction
-        cls._statements.append(statement)
+
 
     @classmethod
-    def execute(cls):
+    def execute(cls, db: str, name: str):
         """
-        Executes all statements as a TclRAL relvar eval transaction
+        Executes all statements in the specified transaction as a TclRAL relvar eval transaction
+
+        :param db: The DB session
+        :param name: The name of the transaction
         :return:  The TclRal success/fail result
         """
-        cls._cmd = f"relvar eval " + "{\n    " + '\n    '.join(cls._statements) + "\n}"
-        _logger.info(f"Executing transaction:")
-        _logger.info(cls._cmd)
-        cls._result = cls._tclral.eval(cls._cmd)
-        cls._statements = None  # The statements have been executed
-        _logger.info(f"With result: [{cls._result}]")
-        _logger.info(f"PYRAL TR CLOSED")
+        try:
+            cmd = f"relvar eval " + "{\n    " + '\n    '.join(cls.pending[db][name]) + "\n}"
+        except KeyError:
+            _logger.error(f"No transaction [{name}] open on db [{db}]")
+            raise NoOpenTransaction
 
+        _logger.info(f"Executing transaction:")
+        _logger.info(cmd)
+        result = Database.sessions[db].eval(cmd)
+
+        # Delete the executed transaction
+        del cls.pending[db][name]
+
+        _logger.info(f"With result: [{result}]")
+        _logger.info(f"Transaction [{name} closed on db [{db}]")
