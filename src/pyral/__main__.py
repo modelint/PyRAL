@@ -49,7 +49,6 @@ def main():
         from print_table import TableTest
         TableTest.do_r()
 
-
     logger.info("No problemo")  # We didn't die on an exception, basically
     print("\nNo problemo")
 

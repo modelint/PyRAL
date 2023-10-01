@@ -13,7 +13,9 @@ from collections import namedtuple
 # Xdata_tuple = namedtuple('Xdata_tuple', 'S')
 @pytest.fixture
 def aircraft_db():
-    db = Database.init()
+    db = "ac"
+
+    Database.open_session("acdb")
     Relvar.create_relvar(db, name='Aircraft', attrs=[Attribute('ID', 'string'), Attribute('Altitude', 'int'),
                                                      Attribute('Heading', 'int')], ids={1: ['ID']})
     db.eval('relvar insert Aircraft {ID N1397Q Altitude 13275 Heading 320}')

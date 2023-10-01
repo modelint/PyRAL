@@ -1,80 +1,137 @@
 """
-database.py - Create and manage a tclRAL database
+database.py - Create and manage one or more tclRAL databases
 """
 
 import logging
-import tkinter
-from pyral.transaction import Transaction
+from tkinter import Tcl, Tk
+from exceptions import PyRALException
 from pathlib import Path
+
+_logger = logging.getLogger(__name__)
 
 class Database:
     """
-    Proxy for a tclRAL database.
+    Manage a set of PyRAL sessions.
 
-    First we must initiate the connection with an optionally specified database.
-    If none is specified, a new in memory database may be created
+    A PyRAL session is simply a tcl interpreter object that has been initialized
+    by importing Andrew Mangogna's TclRAL packages.
 
+    These packages must have been compiled for your platform and placed in the directory
+    assigned to the ral_lib_path below.
+
+    A PyRAL session can then be operated on with PyRAL commands that ultimately resolve into
+    TclRAL commands evalued by the associated tcl interpreter object.
+
+    A unique human-readable name is associated with each PyRAL session so that it can be easily
+    managed in a dictionary.
     """
-    _logger = logging.getLogger(__name__)
-    tclRAL = None  # Tcl interpreter
-    transaction = None
-    init_script_path = str(Path(__file__).parent / "tcl_scripts" / "init_TclRAL.tcl")
+    # Path to the TclRAL library
+    ral_lib_path = Path(__file__).parent / "tcl_scripts" / "init_TclRAL.tcl"
+    sessions = {}  # A dictionary of open TclRAL sessions keyed by session name
 
     @classmethod
-    def init(cls, db_path=None):
+    def open_session(cls, name: str) -> Tk:
         """
-        Get a tcl interpreter and run a script in it that loads up TclRAL
-        :return:
-        """
-        cls.tclRAL = tkinter.Tcl()  # Got tcl interpreter
-        # Load TclRAL into that interpreter
-        cls.tclRAL.eval(f"source {cls.init_script_path}")
-        cls._logger.info("TclRAL initiated")
+        Open a PyRAL session.
 
-        if db_path:
-            # TODO: Have TclRAL load the tclral from the specified path
-            pass
-        return cls.tclRAL
+        We do this by getting a new tcl interpreter and having it load TclRAL.
+
+        Then we add the TclRAL'd tcl interpreter object to our dictionary of open sessions.
+
+        We return the newly initiated tcl interpreter object though the client can more conveniently
+        specify its session via the name.
+
+        :param name:
+        :return:  The TclRAL tcl interpreter instance is returned
+        """
+        # Verify that the name is not an empty string
+        if not name:
+            _logger.error(f"Empty '' name provided for PyRAL session")
+            raise PyRALException
+
+        # Verify that this session is not already open
+        if name in cls.sessions:
+            _logger.error(f"PyRAL session [{name}] already open")
+            raise PyRALException
+
+        tcl_int = Tcl()  # Get a new tcl interpreter
+        tcl_int.eval(f"source {cls.ral_lib_path}")  # Load TclRAL library
+        cls.sessions["name"] = tcl_int  # Add it to the open session dictionary
+        _logger.info(f"PyRAL session [{name}] initiated")
+
+        return tcl_int
 
     @classmethod
-    def open_transaction(cls):
+    def close_session(cls, name: str):
+        """
+        Closes an open TclRAL session
+
+        :param name:  Session name
         """
 
-        :return:
-        """
-        Transaction.open(tclral=cls.tclRAL)
+        # Verify that this session is open
+        if name not in cls.sessions:
+            _logger.error(f"PyRAL session [{name}] is not open")
+            raise PyRALException
+
+        del cls.sessions[name]
+        _logger.info(f"PyRAL session [{name}] closed")
 
     @classmethod
-    def save(cls, fname):
+    def save(cls, db: str, fname: str):
         """
         Save the db in the supplied file
+
+        :param db:  Database name
+        :param fname: File name
         """
-        cls.tclRAL.eval(f"serializeToFile {fname}")
+        try:
+            cls.sessions[db].eval(f"serializeToFile {fname}")
+        except KeyError:
+            _logger.error(f"Session [{db}] not open")
 
     @classmethod
-    def load(cls, fname):
+    def load(cls, db: str, fname: str):
         """
         Load the db from the supplied file
+
+        :param db:  Database name
+        :param fname: File name
         """
-        cls.tclRAL.eval(f"deserializeFromFile {fname}")
+        try:
+            cls.sessions[db].eval(f"deserializeFromFile {fname}")
+        except KeyError:
+            _logger.error(f"Session [{db}] not open")
 
     @classmethod
-    def names(cls, pattern: str = ""):
+    def names(cls, db: str, pattern: str = ""):
         """
-        Use this to obtain names of all created relvars or those specified by the optional pattern.
+        Use this to obtain names of all created relvars using the optional pattern.
 
-        :param pattern:
+        :param db:  Database name
+        :param pattern:  Apply this optional pattern
         """
-        result = cls.tclRAL.eval(f"relvar names {pattern}")
-        cls._logger.info(result)
+        try:
+            result = cls.sessions[db].eval(f"relvar names {pattern}")
+        except KeyError:
+            _logger.error(f"Session [{db}] not open")
+
+        _logger.info(f"Names in sesssion [{db}] using pattern [{pattern}]")
+        _logger.info(result)
 
     @classmethod
-    def constraint_names(cls, pattern: str = ""):
+    def constraint_names(cls, db: str, pattern: str = ""):
         """
-        Use this to obtain names of all created constraints or those specified by the optional pattern.
+        Use this to obtain names of all created constraints and names using the optional pattern.
 
-        :param pattern:
+        :param db:  Database name
+        :param pattern:  Apply this optional pattern
         """
-        result = cls.tclRAL.eval(f"relvar constraint names {pattern}")
-        cls._logger.info(result)
+        try:
+            result = cls.sessions[db].eval(f"relvar constraint names {pattern}")
+        except KeyError:
+            _logger.error(f"Session [{db}] not open")
+
+        _logger.info(f"Constraints and names in sesssion [{db}] using pattern [{pattern}]")
+        _logger.info(result)
 

@@ -14,6 +14,12 @@ class PyRALException(Exception):
 class Transaction(PyRALException):
     pass
 
+class DuplicateTransaction(Transaction):
+    pass
+
+class UnNamedTransaction(Transaction):
+    pass
+
 class NoOpenTransaction(PyRALException):
     def __str__(self):
         return f'{pre}Attempt to add statement when no transaction has been opened.{post}'
