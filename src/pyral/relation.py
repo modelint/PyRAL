@@ -7,9 +7,9 @@ import re
 from tabulate import tabulate
 from typing import List, Optional, Dict, Tuple
 from pyral.rtypes import RelationValue
-from pyral.command import Command
+from pyral.database import Database
 
-from tkinter import Tk
+_logger = logging.getLogger(__name__)
 
 # If we want to apply successive (nested) operations in TclRAL we need to have the result
 # of each TclRAL command saved in tcl variable. So each time we execute a command that produces
@@ -25,7 +25,6 @@ class Relation:
     """
     A relational value
     """
-    _logger = logging.getLogger(__name__)
 
     @classmethod
     def build_select_expr(cls, selection: str) -> str:
@@ -65,17 +64,17 @@ class Relation:
         return sexpr.rstrip(' &&') + "}"
 
     @classmethod
-    def set_var(cls, tclral: Tk, name: str):
+    def set_var(cls, db: str, name: str):
         """
         Set a temporary TclRAL relation variable to the most recent returned result.
         This allows us to save a particular TclRAL return value string so that we can plug it
         into a subsequent TclRAL operation.
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param name: The variable name (must be a legal Tcl variable name
         """
         session_variable_names.add(name)
-        tclral.eval(f"set {name} ${{{_relation}}}")
+        Database.sessions[db].eval(f"set {name} ${{{_relation}}}")
 
     @classmethod
     def make_attr_list(cls, attrs: Dict[str, str]) -> str:
@@ -90,13 +89,13 @@ class Relation:
         return attr_list[:-1] + "}"
 
     @classmethod
-    def join(cls, tclral: Tk, rname2: str, rname1: str = _relation, attrs: Dict[str, str] = {},
+    def join(cls, db: str, rname2: str, rname1: str = _relation, attrs: Dict[str, str] = {},
              svar_name: Optional[str] = None) -> RelationValue:
         """
         Perform a natural join on two relations using an optional attribute mapping. If no attributes are specified,
         the join is performed on same named attributes.
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param rname1: Name of one relvar to join
         :param rname2: Name of the other relvar
         :param attrs: Dictionary in format { r1.attr_name: r2.attr_name, ... }
@@ -107,13 +106,13 @@ class Relation:
         if attrs:
             cmd += " -using " + cls.make_attr_list(attrs)
         cmd += ']'
-        result = Command.execute(tclral, cmd)
+        result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
+            cls.set_var(db, svar_name)
         return cls.make_pyrel(result)
 
     @classmethod
-    def rename(cls, tclral: Tk, names: Dict[str, str], relation: str = _relation,
+    def rename(cls, db: str, names: Dict[str, str], relation: str = _relation,
                svar_name: Optional[str] = None) -> RelationValue:
         """
         (NOTE: I only just NOW realized that the TclRAL join command provides an option to specify multiple renames
@@ -144,7 +143,7 @@ class Relation:
             relation: 'Attribute_Reference'
             names: {'To_attribute': 'Name', 'To_class': 'Class'}
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param relation: The relation to rename
         :param names: Dictionary in format { old_name: new_name }
         :param svar_name:  Name of a TclRAL session variable named for future reference
@@ -156,14 +155,14 @@ class Relation:
         for old_name, new_name in names.items():
             # The first rename operation is on the supplied relation
             cmd = f'set {_relation} [relation rename ${{{r}}} {old_name} {new_name}]'
-            result = Command.execute(tclral, cmd)
+            result = Database.execute(db, cmd)
             r = _relation  # Subsequent renames are based on the previous result
         if svar_name:  # Save the final result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
+            cls.set_var(db, svar_name)
         return cls.make_pyrel(result)  # Result of the final rename (all renames in place)
 
     @classmethod
-    def intersect(cls, tclral: Tk, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None
+    def intersect(cls, db: str, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None
                  ) -> RelationValue:
         """
         Returns the intersection of two relations using the TclRAL intersect command.
@@ -177,20 +176,20 @@ class Relation:
         The TclRAL syntax is:
             relation intersect <relationValue1> <relationValue2>
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param rname1:
         :param rname2:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Subtraction relation as a TclRAL string
         """
         cmd = f'set {_relation} [relation intersect ${{{rname1}}} ${rname2}]'
-        result = Command.execute(tclral, cmd)
+        result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
+            cls.set_var(db, svar_name)
         return cls.make_pyrel(result)
 
     @classmethod
-    def compare(cls, tclral: Tk, op: str, rname2: str, rname1: str = _relation) -> bool:
+    def compare(cls, db: str, op: str, rname2: str, rname1: str = _relation) -> bool:
         """
         Returns the intersection of two relations using the TclRAL intersect command.
 
@@ -203,7 +202,7 @@ class Relation:
         The TclRAL syntax is:
             relation intersect <relationValue1> <relationValue2>
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param op:  Comparision operation
         :param rname1:
         :param rname2:
@@ -211,11 +210,11 @@ class Relation:
         :return Subtraction relation as a TclRAL string
         """
         cmd = f'relation is ${{{rname1}}} {op} ${rname2}'
-        result = bool(int(Command.execute(tclral, cmd)))
+        result = bool(int(Database.execute(db, cmd)))
         return result
 
     @classmethod
-    def subtract(cls, tclral: Tk, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None
+    def subtract(cls, db: str, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None
                  ) -> RelationValue:
         """
         Returns the set difference between two relations using the TclRAL minus command.
@@ -246,21 +245,21 @@ class Relation:
         :return Subtraction relation as a TclRAL string
         """
         cmd = f'set {_relation} [relation minus ${{{rname1}}} ${rname2}]'
-        result = Command.execute(tclral, cmd)
+        result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
+            cls.set_var(db, svar_name)
         return cls.make_pyrel(result)
 
     @classmethod
-    def get_rval_string(cls, tclral: Tk, variable_name: str) -> str:
+    def get_rval_string(cls, db: str, variable_name: str) -> str:
         """
         Obtain a relation from a TclRAL variable
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param variable_name: Name of a variable containing a relation defined in that session
         :return: TclRAL string representing the relation value
         """
-        return Command.execute(tclral, cmd=f"set {variable_name}")
+        return Database.execute(db, cmd=f"set {variable_name}")
 
     @classmethod
     def make_pyrel(cls, relation: str, name: str = _relation) -> RelationValue:
@@ -342,16 +341,16 @@ class Relation:
         return rval
 
     @classmethod
-    def print(cls, tclral: 'Tk', variable_name: str = _relation, table_name: Optional[str] = None):
+    def print(cls, db: str, variable_name: str = _relation, table_name: Optional[str] = None):
         """
         Given the name of a TclRAL relation variable, obtain its value and print it as a table.
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param variable_name: Name of the TclRAL variable to print, also used to name the table if no table_name
         :param table_name:  If supplied, this name is used instead of the variable name to name the printed table
         """
         # convert the TclRAL string value held in the session variable into a PyRAL relation and print it
-        rval = cls.make_pyrel(relation=cls.get_rval_string(tclral, variable_name),
+        rval = cls.make_pyrel(relation=cls.get_rval_string(db, variable_name),
                               name=table_name if table_name else variable_name)
         cls.relformat(rval)
 
@@ -372,14 +371,14 @@ class Relation:
                        tablefmt="outline"))  # That last parameter chooses our table style
 
     @classmethod
-    def project(cls, tclral: Tk, attributes: Tuple[str, ...], relation: str = _relation,
+    def project(cls, db: str, attributes: Tuple[str, ...], relation: str = _relation,
                 svar_name: Optional[str] = None) -> RelationValue:
         """
         Returns a relation whose heading consists of only a set of selected attributes.
         The body of the result consists of the corresponding tuples from the specified relation,
         removing any duplicates created by considering only a subset of the attributes.
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param attributes: Attributes to be projected
         :param relation: The relation to be projected
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
@@ -387,9 +386,9 @@ class Relation:
         """
         projection = ' '.join(attributes)
         cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
-        result = Command.execute(tclral, cmd)
+        result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
+            cls.set_var(db, svar_name)
         return cls.make_pyrel(result)
 
     @classmethod
@@ -402,7 +401,7 @@ class Relation:
         return f"[string match {{{values}}} [tuple extract $t {attr_name}]]"
 
     @classmethod
-    def restrict(cls, tclral: Tk, restriction: str, relation: str = _relation,
+    def restrict(cls, db: str, restriction: str, relation: str = _relation,
                  svar_name: Optional[str] = None) -> RelationValue:
         """
         Here we select zero or more tuples that match the supplied criteria.
@@ -421,7 +420,7 @@ class Relation:
             restriction: 'Type:<unresolved>, Domain:Elevator Management'
 
 
-        :param tclral: The TclRAL session
+        :param db: DB session name
         :param relation: Name of a relation variable where the operation is applied
         :param restriction: A string in Scrall notation that specifies the restriction criteria
         :param svar_name: An optional session variable that holds the result
@@ -436,9 +435,9 @@ class Relation:
 
         # Insert it in the tlcral relation restrict command and execute
         cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
-        result = Command.execute(tclral, cmd)
+        result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(tclral, svar_name)
+            cls.set_var(db, svar_name)
         return cls.make_pyrel(result)
 
     @classmethod
