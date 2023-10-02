@@ -22,7 +22,7 @@ def before_after_tests(tmpdir):
     Database.close_session(acdb)
     return acdb
 
-def test_tr1(before_after_tests):
+def test_tr1():
     acdb = "ac"
     tr1 = Transaction.open(acdb, "tr1")
     Relvar.create_relvar(acdb, name='Aircraft', attrs=[Attribute('ID', 'string'), Attribute('Altitude', 'int'),

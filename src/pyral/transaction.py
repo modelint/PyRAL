@@ -2,7 +2,8 @@
 transaction.py -- Database transaction
 """
 import logging
-from pyral.exceptions import IncompleteTransactionPending, NoOpenTransaction, UnNamedTransaction, PyRALException
+from pyral.exceptions import (DuplicateTransaction, NoOpenTransaction, UnNamedTransaction, PyRALException,
+                              SessionNotOpen)
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -28,13 +29,19 @@ class Transaction:
             _logger.error(f"No transaction name provided on open for db [{db}]")
             raise UnNamedTransaction
 
-        # Verify that the transaction is not already open
-        if name in db:
+        # Add the database to the pending dictionary if it isn't already registered
+        if db not in cls.pending:
+            if db not in Database.sessions:
+                _logger.error(f"No open session for database [{db}]")
+                raise SessionNotOpen
+            cls.pending[db] = {}
+        elif name in db:
+            # Verify that the transaction is not already open
             _logger.error(f"Transaction {name} already pending for db [{db}]")
-            raise IncompleteTransactionPending
+            raise DuplicateTransaction
 
         # Create a new empty tranaction
-        cls.pending[db] = {name: []}
+        cls.pending[db][name] = []
         return name
 
     @classmethod

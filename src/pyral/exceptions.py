@@ -2,35 +2,35 @@
 exceptions.py – PyRAL exceptions
 """
 
-# Every error should have the same format
-# with a standard prefix and postfix defined here
-pre = "\nPyRAL: ["
-post = "]"
-
-
 class PyRALException(Exception):
-    pass
-
-class TclRALException(PyRALException):
+    """ Top level PyRAL exception """
     pass
 
 class Transaction(PyRALException):
+    """ Top level PyRAL Transaction exception """
+    pass
+
+
+class SessionNotOpen(PyRALException):
+    """ The database session has not been opened """
+    pass
+
+class TclRALException(PyRALException):
+    """ A TclRAL or Tcl error occured inside the tcl interpeter """
     pass
 
 class DuplicateTransaction(Transaction):
+    """ Cannot use name to open a new transaction since one is aready open by that name """
     pass
 
 class UnNamedTransaction(Transaction):
+    """ Name does not correspond to any pending transaction """
     pass
 
 class NoOpenTransaction(PyRALException):
-    def __str__(self):
-        return f'{pre}Attempt to add statement when no transaction has been opened.{post}'
-
-class IncompleteTransactionPending(PyRALException):
-    def __str__(self):
-        return f'{pre}Only one transaction may be open at a time.{post}'
+    """ Attempt to add statement when no transaction has been opened """
+    pass
 
 class RestrictOneOnZeroCardinality(PyRALException):
-    def __str__(self):
-        return f'{pre}Attempted restrict one operation on relation with no tuples.{post}'
+    """ Attempted restrict-one operation on relation with no tuples """
+    pass
