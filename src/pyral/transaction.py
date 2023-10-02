@@ -42,6 +42,7 @@ class Transaction:
 
         # Create a new empty tranaction
         cls.pending[db][name] = []
+        _logger.info(f"OPEN > {db}:{name}")
         return name
 
     @classmethod
@@ -93,5 +94,5 @@ class Transaction:
         # Delete the executed transaction
         del cls.pending[db][name]
 
+        _logger.info(f"EXECUTED > {db}:{name}")
         _logger.info(f"With result: [{result}]")
-        _logger.info(f"Transaction [{name} closed on db [{db}]")
