@@ -47,9 +47,11 @@ def test_compare_not_equal(aircraft_db):
 
 
 def test_intersect(aircraft_db):
-    Database.sessions[aircraft_db].eval('set high [relation restrict $Aircraft t {[tuple extract $t Altitude] > 9000}]')
+    cmd_high = 'set high [relation restrict $Aircraft t {[tuple extract $t Altitude] > 9000}]'
+    cmd_low = 'set low [relation restrict $Aircraft t {[tuple extract $t Altitude] < 13000}]'
+    Database.execute(aircraft_db, cmd=cmd_high)
+    Database.execute(aircraft_db, cmd=cmd_low)
     Relation.print(aircraft_db, 'high')
-    Database.sessions[aircraft_db].eval('set low [relation restrict $Aircraft t {[tuple extract $t Altitude] < 13000}]')
     Relation.print(aircraft_db, 'low')
     b = Relation.intersect(aircraft_db, rname2='high', rname1='low')
     expected = RelationValue(name='^relation',

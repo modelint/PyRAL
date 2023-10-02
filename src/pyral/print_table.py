@@ -5,23 +5,14 @@ print_table.py -- Test table printing
 from pyral.database import Database
 from pyral.relvar import Relvar
 from pyral.relation import Relation
-from pyral.transaction import Transaction
 from pyral.rtypes import Attribute
 
 from collections import namedtuple
 
 Aircraft_i = namedtuple('Aircraft_i', 'ID Altitude Heading')
+Pilot_i = namedtuple('Pilot_i', 'Callsign Tailnumber Age')
 
 class TableTest:
-
-    # @classmethod
-    # def print_table(cls):
-    #     db = Database.init()
-    #     Relvar.create_relvar(db, name='X', attrs=[Attribute('S', 'string')], ids={1: ['S']})
-    #     db.eval('relvar insert X {S {hello there}}')
-    #     db.eval('relvar insert X {S {Stop requested == true}}')
-    #     db.eval('relvar insert X {S {world}}')
-    #     Relation.print(db, "X")
 
     @classmethod
     def do_r(cls):
@@ -36,17 +27,19 @@ class TableTest:
             Aircraft_i(ID='N5130B', Altitude=8159, Heading=90),
 
         ])
-        Relvar.create_relvar(db, name='Pilot', attrs=[Attribute('Callsign', 'string'), Attribute('Tailnumber', 'string'),
+        Relvar.create_relvar(acdb, name='Pilot', attrs=[Attribute('Callsign', 'string'), Attribute('Tailnumber', 'string'),
                                                       Attribute('Age', 'int')], ids={1: ['Callsign']})
-        # db.eval('relvar insert Pilot {Callsign Viper Tailnumber N1397Q Age 22}')
-        # db.eval('relvar insert Pilot {Callsign Joker Tailnumber N5130B Age 31}')
+        Relvar.insert(acdb, relvar='Pilot', tuples=[
+            Pilot_i(Callsign='Viper', Tailnumber='N1397Q', Age=22),
+            Pilot_i(Callsign='Joker', Tailnumber='N5130B', Age=31),
+        ])
         Relation.print(acdb, "Aircraft")
-        # Relation.print(db, "Pilot")
+        Relation.print(acdb, "Pilot")
 
-        # aone = Relvar.select_id(db, 'Aircraft', {'Tailnumber': '1397Q'}, svar_name='One')
-        # Relation.relformat(aone)
+        aone = Relvar.select_id(acdb, 'Aircraft', {'ID': '1397Q'}, svar_name='One')
+        Relation.relformat(aone)
 
-        # result = Relation.join(db, rname1='Pilot', rname2='Aircraft')
+        # result = Relation.join(acdb, rname1='Pilot', rname2='Aircraft')
         #
         # # result = Relation.project(db, attributes=('Age',), relation='Pilot')
         # Relation.relformat(result)
