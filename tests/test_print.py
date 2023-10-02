@@ -11,6 +11,10 @@ from collections import namedtuple
 Aircraft_i = namedtuple('Aircraft_i', 'ID Altitude Heading')
 Pilot_i = namedtuple('Pilot_i', 'Callsign Tailnumber Age')
 
+@pytest.fixture(scope='module', autouse=True)
+def tear_down():
+    yield
+    Database.close_session("ac")
 
 @pytest.fixture(scope='module')
 def aircraft_db():

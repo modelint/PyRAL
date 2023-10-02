@@ -9,6 +9,7 @@ from pathlib import Path
 
 _logger = logging.getLogger(__name__)
 
+
 class Database:
     """
     Manage a set of PyRAL sessions.
@@ -30,7 +31,6 @@ class Database:
     # Path to the TclRAL library
     ral_lib_path = Path(__file__).parent / "tcl_scripts" / "init_TclRAL.tcl"
     sessions = {}  # A dictionary of open TclRAL sessions keyed by session name
-
 
     @classmethod
     def open_session(cls, name: str) -> Tk:
@@ -132,13 +132,15 @@ class Database:
         if log:
             _logger.info(f"result: {result}")
         return result
+
     @classmethod
-    def names(cls, db: str, pattern: str = ""):
+    def names(cls, db: str, pattern: str = "") -> str:
         """
         Use this to obtain names of all created relvars using the optional pattern.
 
         :param db:  Database name
         :param pattern:  Apply this optional pattern
+        :return: TclRAl returned string
         """
         try:
             result = cls.sessions[db].eval(f"relvar names {pattern}")
@@ -148,6 +150,7 @@ class Database:
 
         _logger.info(f"Names in sesssion [{db}] using pattern [{pattern}]")
         _logger.info(result)
+        return result
 
     @classmethod
     def constraint_names(cls, db: str, pattern: str = ""):
@@ -165,4 +168,3 @@ class Database:
 
         _logger.info(f"Constraints and names in sesssion [{db}] using pattern [{pattern}]")
         _logger.info(result)
-

@@ -15,12 +15,13 @@ class Transaction:
     pending = {}
 
     @classmethod
-    def open(cls, db: str, name: str):
+    def open(cls, db: str, name: str) -> str:
         """
         Starts a new empty transaction by ensuring that there are no statements
 
         :param db: The DB session
         :param name: The name of this transaction, must be unique for the db
+        :return: The provided name is returned to make it easy for client to use downstream
         """
         # Verify that the name is not an empty string
         if not name:
@@ -34,6 +35,7 @@ class Transaction:
 
         # Create a new empty tranaction
         cls.pending[db] = {name: []}
+        return name
 
     @classmethod
     def append_statement(cls, db: str, name: str, statement: str):

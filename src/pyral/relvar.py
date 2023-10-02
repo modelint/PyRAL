@@ -174,7 +174,7 @@ class Relvar:
         Database.execute(db, cmd=verify_cmd)
 
     @classmethod
-    def insert(cls, db: str, relvar: str, tuples: List[namedtuple], tr_name: str = None):
+    def insert(cls, db: str, relvar: str, tuples: List[namedtuple], tr: Optional[str] = None):
         """
         Insert a set of tuples into the value of a relvar, modifying it in place.
 
@@ -197,7 +197,7 @@ class Relvar:
         :param db: DB session name
         :param relvar: The name of an existing relvar
         :param tuples: A list of tuples named such that the attributes exactly match the relvar header
-        :param tr_name:  Optional transaction name, add to this transaction if supplied
+        :param tr:  Optional transaction name, add to this transaction if supplied
         """
         # Start command with the relvar command prefix
         cmd = f"relvar insert {relvar} "
@@ -211,8 +211,8 @@ class Relvar:
         cmd = cmd[:-1]
 
         # Add to open transaction if tr_name is provided
-        if tr_name:
-            Transaction.append_statement(db, name=tr_name, statement=cmd)
+        if tr:
+            Transaction.append_statement(db, name=tr, statement=cmd)
         else:
             Database.execute(db, cmd)
 
@@ -348,7 +348,7 @@ class Relvar:
         return Database.execute(db, cmd)
 
     @classmethod
-    def deleteone(cls, db: str, relvar_name: str, tid: Dict, defer: bool = False) -> str:
+    def deleteone(cls, db: str, relvar_name: str, tid: Dict, tr: Optional[str] = None) -> str:
         """
         Deletes in place at most one tuple of the relvar's value.
 
@@ -368,7 +368,7 @@ class Relvar:
         :param db: DB session name
         :param relvar_name: The relvar to be deleted
         :param tid: Identifier value for the tuple to be deleted
-        :param defer: If true, appended to open transaction, otherwise execute now and return result
+        :param tr: If name provided, appended to transaction, otherwise execute now and return result
         :return: A relation value with the same heading as the value held in relvarName and whose body contains either
         the single tuple that was updated or is empty if no matching tuple was found.
         """
@@ -376,10 +376,10 @@ class Relvar:
         for id_attr, id_val in tid.items():
             id_str += f"{id_attr} {{{id_val}}} "
         cmd = f'relvar deleteone {relvar_name} {id_str}'
-        if not defer:
+        if not tr:
             return Database.execute(db, cmd)
         else:
-            Transaction.append_statement(statement=cmd)
+            Transaction.append_statement(db, name=tr, statement=cmd)
             return ''
 
     @classmethod
