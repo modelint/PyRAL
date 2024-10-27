@@ -168,3 +168,4 @@ class Database:
 
         _logger.info(f"Constraints and names in sesssion [{db}] using pattern [{pattern}]")
         _logger.info(result)
+        return result
