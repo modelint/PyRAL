@@ -13,7 +13,7 @@ from collections import namedtuple
 Aircraft_i = namedtuple('Aircraft_i', 'ID Altitude Heading')
 Pilot_i = namedtuple('Pilot_i', 'Callsign Tailnumber Age')
 Region_i = namedtuple('Region_i', 'Data_box Title_block_pattern Stack_order')
-DataBox_i = namedtuple('DataBox_i', 'ID Title_block_pattern Name')
+DataBox_i = namedtuple('DataBox_i', 'ID Pattern Name')
 
 class SumTest:
 
@@ -39,8 +39,8 @@ set Data_Box {
             Attribute('Stack_order', 'int')],ids={1: ['Data_box', 'Title_block_pattern', 'Stack_order']})
         Relvar.create_relvar(db=stdb, name='Data_Box', attrs=[
             Attribute('ID', 'int'),
-            Attribute('Title_block_pattern', 'string'),
-            Attribute('Name', 'string')],ids={1: ['ID', 'Title_block_pattern']})
+            Attribute('Pattern', 'string'),
+            Attribute('Name', 'string')],ids={1: ['ID', 'Pattern']})
 
         Relvar.insert(db=stdb, relvar='Region', tuples=[
             Region_i(Data_box=3, Title_block_pattern='SE Simple', Stack_order=1),
@@ -51,13 +51,16 @@ set Data_Box {
             Region_i(Data_box=7, Title_block_pattern='SE Simple', Stack_order=2),
         ])
         Relvar.insert(db=stdb, relvar='Data_Box', tuples=[
-            DataBox_i(ID=3, Title_block_pattern='SE Simple', Name='Bottom'),
-            DataBox_i(ID=5, Title_block_pattern='SE Simple', Name='Main'),
-            DataBox_i(ID=6, Title_block_pattern='SE Simple', Name='Rtop'),
-            DataBox_i(ID=7, Title_block_pattern='SE Simple', Name='Rbottom'),
+            DataBox_i(ID=3, Pattern='SE Simple', Name='Bottom'),
+            DataBox_i(ID=5, Pattern='SE Simple', Name='Main'),
+            DataBox_i(ID=6, Pattern='SE Simple', Name='Rtop'),
+            DataBox_i(ID=7, Pattern='SE Simple', Name='Rbottom'),
         ])
         Relvar.printall(stdb)
 
+        result = Relation.summarizeby(db=stdb, relation='Region', attrs=['Data_box'],
+                                      sum_attr=Attribute(name='Qty', type='int'))
+        pass
 
 class TableTest:
 

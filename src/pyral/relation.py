@@ -6,7 +6,7 @@ import logging
 import re
 from tabulate import tabulate
 from typing import List, Optional, Dict, Tuple
-from pyral.rtypes import RelationValue
+from pyral.rtypes import RelationValue, Attribute
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -399,6 +399,27 @@ class Relation:
 
         # There's only one value
         return f"[string match {{{values}}} [tuple extract $t {attr_name}]]"
+
+    @classmethod
+    def summarizeby(cls, db: str, relation: str, attrs: List[str], sum_attr: Attribute, op='count',
+                    svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Only one summarization operation supported by PyRAL at the moment - count
+        :param db:
+        :param relation:
+        :param attrs:
+        :param sum_attr:
+        :param op:
+        :param svar_name:
+        :return:
+        """
+        cmd = (f"set {_relation} [relation summarizeby ${{{relation}}} {' '.join(attrs)} s "
+               f"{sum_attr.name} {sum_attr.type} {{[relation cardinality $s]}}]")
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db, svar_name)
+        return cls.make_pyrel(result)
+
 
     @classmethod
     def restrict(cls, db: str, restriction: str, relation: str = _relation,
