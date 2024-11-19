@@ -46,8 +46,11 @@ def main():
         print(f'PyRAL version: {version}')
 
     if args.test:
-        from print_table import TableTest
-        TableTest.do_r()
+        from print_table import SumTest
+        SumTest.do_r()
+    # if args.test:
+    #     from print_table import TableTest
+    #     TableTest.do_r()
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     print("\nNo problemo")
