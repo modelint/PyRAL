@@ -18,15 +18,7 @@ DataBox_i = namedtuple('DataBox_i', 'ID Pattern Name')
 class SumTest:
 
     """
-
-set Data_Box {
- {ID int Pattern string Name string} {
-     {Data_box 3 Tbp SE_Simple Name Bottom}
-     {Data_box 5 Tbp SE_Simple Name Main}
-     {Data_box 6 Tbp SE_Simple Name Rtop}
-     {Data_box 7 Tbp SE_Simple Name Rbottom}
- }
-}
+    Test summarizeby command for count / cardinality
     """
     @classmethod
     def do_r(cls):
@@ -37,12 +29,10 @@ set Data_Box {
             Attribute('Data_box', 'int'),
             Attribute('Title_block_pattern', 'string'),
             Attribute('Stack_order', 'int')],ids={1: ['Data_box', 'Title_block_pattern', 'Stack_order']})
-        Relvar.create_relvar(db=stdb, name='Data_Box', attrs=[
-            Attribute('ID', 'int'),
-            Attribute('Pattern', 'string'),
-            Attribute('Name', 'string')],ids={1: ['ID', 'Pattern']})
 
         Relvar.insert(db=stdb, relvar='Region', tuples=[
+            Region_i(Data_box=3, Title_block_pattern='Complex', Stack_order=1),
+            Region_i(Data_box=3, Title_block_pattern='Complex', Stack_order=2),
             Region_i(Data_box=3, Title_block_pattern='SE Simple', Stack_order=1),
             Region_i(Data_box=5, Title_block_pattern='SE Simple', Stack_order=1),
             Region_i(Data_box=6, Title_block_pattern='SE Simple', Stack_order=1),
@@ -50,16 +40,11 @@ set Data_Box {
             Region_i(Data_box=7, Title_block_pattern='SE Simple', Stack_order=1),
             Region_i(Data_box=7, Title_block_pattern='SE Simple', Stack_order=2),
         ])
-        Relvar.insert(db=stdb, relvar='Data_Box', tuples=[
-            DataBox_i(ID=3, Pattern='SE Simple', Name='Bottom'),
-            DataBox_i(ID=5, Pattern='SE Simple', Name='Main'),
-            DataBox_i(ID=6, Pattern='SE Simple', Name='Rtop'),
-            DataBox_i(ID=7, Pattern='SE Simple', Name='Rbottom'),
-        ])
         Relvar.printall(stdb)
 
-        result = Relation.summarizeby(db=stdb, relation='Region', attrs=['Data_box'],
-                                      sum_attr=Attribute(name='Qty', type='int'))
+        result = Relation.summarizeby(db=stdb, relation='Region', attrs=['Data_box', 'Title_block_pattern'],
+                                      sum_attr=Attribute(name='Qty', type='int'), svar_name="Number_of_regions")
+        Relation.print(db=stdb, variable_name="Number_of_regions")
         pass
 
 class TableTest:

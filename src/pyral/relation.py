@@ -405,15 +405,68 @@ class Relation:
                     svar_name: Optional[str] = None) -> RelationValue:
         """
         Only one summarization operation supported by PyRAL at the moment - count
-        :param db:
+        :param db: DB session name
         :param relation:
         :param attrs:
         :param sum_attr:
         :param op:
         :param svar_name:
         :return:
+
+        From TclRAL man page:
+        --
+        The summarizeby subcommand is a more convenient form of summarize where the per relation is a projection of
+        the relation value that is to be summarized. Rather than supplying a per relation, instead a list of
+        attributes is given by the attrList argument and relationValue is projected on those attributes and
+        used as the per relation. The arguments and results are otherwise the same as for the summarize command.
+
+        TclRAL syntax:
+        relation summarizeby relationValue attrList relationVarName attr type expression ?attr type expression ...?
+
+        TclRAL command example:
+        % relformat [relation summarizeby $OWNERSHIP Acquired s NumAcquired int {[relation cardinality $s]}]
+
+        PyRal implements this in limited form for now.  Only the cardinality operations is supported.
+        Given this input to PyRAL:
+
+            Relation.summarizeby(db=stdb, relation='Region', attrs=['Data_box', 'Title_block_pattern'],
+                                 sum_attr=Attribute(name='Qty', type='int'), svar_name="Number_of_regions")
+
+            We get the TclRAL command:
+                relation summarizeby ${Region} {Data_box Title_block_pattern} s Qty int {[relation cardinality $s]}
+
+        Applied to this example relation:
+
+        -- Region --
+        +------------+-----------------------+---------------+
+        |   Data_box | Title_block_pattern   |   Stack_order |
+        +============+=======================+===============+
+        |          3 | Complex               |             1 |
+        |          3 | Complex               |             2 |
+        |          3 | SE Simple             |             1 |
+        |          5 | SE Simple             |             1 |
+        |          6 | SE Simple             |             1 |
+        |          6 | SE Simple             |             2 |
+        |          7 | SE Simple             |             1 |
+        |          7 | SE Simple             |             2 |
+        +------------+-----------------------+---------------+
+
+        We get the following result which tells us the number of Regions per Data Box+Title_block_pattern
+
+        -- Number_of_regions --
+        +------------+-----------------------+-------+
+        |   Data_box | Title_block_pattern   |   Qty |
+        +============+=======================+=======+
+        |          3 | Complex               |     2 |
+        |          3 | SE Simple             |     1 |
+        |          5 | SE Simple             |     1 |
+        |          6 | SE Simple             |     2 |
+        |          7 | SE Simple             |     2 |
+        +------------+-----------------------+-------+
+
+        --
         """
-        cmd = (f"set {_relation} [relation summarizeby ${{{relation}}} {' '.join(attrs)} s "
+        cmd = (f"set {_relation} [relation summarizeby ${{{relation}}} {{{' '.join(attrs)}}} s "
                f"{sum_attr.name} {sum_attr.type} {{[relation cardinality $s]}}]")
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
