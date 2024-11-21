@@ -70,10 +70,13 @@ class TableTest:
             Aircraft_i(ID='N1309Z', Altitude=10100, Heading=273),
             Aircraft_i(ID='N5130B', Altitude=8159, Heading=90),
         ])
+
         Transaction.execute(acdb, tr_p)
         Relation.print(acdb, "Pilot")
         Transaction.execute(acdb, tr_a)
         Relation.print(acdb, "Aircraft")
+        result = Relation.restrict(acdb, relation='Aircraft')
+        pass
 
         # aone = Relvar.select_id(acdb, 'Aircraft', {'ID': '1397Q'}, svar_name='One')
         # Relation.relformat(aone)

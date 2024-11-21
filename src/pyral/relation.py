@@ -475,7 +475,7 @@ class Relation:
 
 
     @classmethod
-    def restrict(cls, db: str, restriction: str, relation: str = _relation,
+    def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,
                  svar_name: Optional[str] = None) -> RelationValue:
         """
         Here we select zero or more tuples that match the supplied criteria.
@@ -500,15 +500,19 @@ class Relation:
         :param svar_name: An optional session variable that holds the result
         :return: The TclRAL string result representing the restricted tuple set
         """
-        setr = re.sub(r"([\w_]*):<({[\w ',]*})>", cls.set_comparison, restriction)
-        # Replace square brackets and logic ops with tcl equivalents
-        restrict_tcl = setr.replace('<', '{').replace('>', '}'). \
-            replace(' OR ', ' || ').replace(', ', ' && ').replace(' AND ', ' && ').replace('NOT ', '!')
-        # Now process ':' attr:value match pairs with tcl string match expressions and wrap with tcl braces
-        rexpr = '{' + re.sub(r'([\w_]*):({[\w ]*})', r'[string match \2 [tuple extract $t \1]]', restrict_tcl) + '}'
+        if not restriction:
+            # Returns the entire relation
+            cmd = f"set {_relation} [set {relation}]"
+        else:
+            setr = re.sub(r"([\w_]*):<({[\w ',]*})>", cls.set_comparison, restriction)
+            # Replace square brackets and logic ops with tcl equivalents
+            restrict_tcl = setr.replace('<', '{').replace('>', '}'). \
+                replace(' OR ', ' || ').replace(', ', ' && ').replace(' AND ', ' && ').replace('NOT ', '!')
+            # Now process ':' attr:value match pairs with tcl string match expressions and wrap with tcl braces
+            rexpr = '{' + re.sub(r'([\w_]*):({[\w ]*})', r'[string match \2 [tuple extract $t \1]]', restrict_tcl) + '}'
 
-        # Insert it in the tlcral relation restrict command and execute
-        cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
+            # Insert it in the tlcral relation restrict command and execute
+            cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
         result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db, svar_name)
