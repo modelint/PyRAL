@@ -1,2 +1,4 @@
 include src/pyral/log.conf
 include src/pyral/tcl_scripts/init_TclRAL.tcl
+recursive-include src/pyral/tcl_scripts/MacIntel *.tm
+recursive-include src/pyral/tcl_scripts/MacSilicon *.tm
