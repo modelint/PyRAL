@@ -2,11 +2,15 @@
 relation.py – Operations on relations
 """
 
+# System
 import logging
 import re
 from tabulate import tabulate
 from typing import List, Optional, Dict, Tuple
-from pyral.rtypes import RelationValue, Attribute
+from collections import namedtuple
+
+# PyRAL
+from pyral.rtypes import RelationValue, Attribute, header, body
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -25,6 +29,26 @@ class Relation:
     """
     A relational value
     """
+
+    @classmethod
+    def create(cls, db: str, attrs: List[Attribute], tuples: List[namedtuple],
+               svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Create a relation
+
+        :param db: DB session name
+        :param attrs: A tuple of attributes (name, type) pairs
+        :param tuples: A list of tuples named such that the attributes exactly match the relvar header
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return: Resulting relation as a PyRAL relation value
+        """
+        h = header(attrs)
+        b = body(tuples)
+        cmd = f'set {_relation} [relation create {h} {b}]'
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
 
     @classmethod
     def build_select_expr(cls, selection: str) -> str:
@@ -369,6 +393,33 @@ class Relation:
         brows = [list(row.values()) for row in rval.body]
         print(tabulate(tabular_data=brows, headers=attr_names,
                        tablefmt="outline"))  # That last parameter chooses our table style
+
+    @classmethod
+    def divide(cls, db: str, dividend: str, divisor: str, mediator: str,
+               svar_name: Optional[str] = None) -> RelationValue:
+        """
+        The divide subcommand implements the relational divide operation.
+
+        The headings of dividend and divisor must be disjoint and the heading of mediator must be
+        the union of the dividend and divisor headings.
+
+        The returned result is a new relation that has the same heading as dividend and contains
+        all the tuples from dividend whose corresponding tuples in mediator include all the tuples in divisor.
+        Stated another way, the result of divide subcommand is the maximal set of tuples from dividend whose
+        Cartesian product with divisor is completely contained in mediator.
+
+        :param db: DB session name
+        :param dividend: The dividend relation name
+        :param divisor: The divisor relation name
+        :param mediator: The mediator relation name
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a PyRAL relation value
+        """
+        cmd = f'set {_relation} [relation divide ${dividend} ${divisor} ${mediator}]'
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
 
     @classmethod
     def project(cls, db: str, attributes: Tuple[str, ...], relation: str = _relation,

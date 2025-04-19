@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 from pyral.database import Database
 from pyral.transaction import Transaction
 from pyral.relation import Relation, _relation
-from pyral.rtypes import Attribute, Mult, delim, RelationValue
+from pyral.rtypes import Attribute, Mult, delim, RelationValue, body, header
 from collections import namedtuple
 
 _logger = logging.getLogger(__name__)
@@ -199,22 +199,16 @@ class Relvar:
         :param tuples: A list of tuples named such that the attributes exactly match the relvar header
         :param tr:  Optional transaction name, add to this transaction if supplied
         """
+        b = body(tuples)
+
         # Start command with the relvar command prefix
-        cmd = f"relvar insert {relvar} "
-        # Add in all of the tuples
-        for t in tuples:
-            cmd += '{'
-            instance_tuple = t._asdict()
-            for k, v in instance_tuple.items():
-                cmd += f"{k} {{{v}}} "  # Spaces are allowed in values
-            cmd = cmd[:-1] + '} '
-        cmd = cmd[:-1]
+        cmd = f"relvar insert {relvar} {b}"
 
         # Add to open transaction if tr_name is provided
         if tr:
-            Transaction.append_statement(db, name=tr, statement=cmd)
+            Transaction.append_statement(db=db, name=tr, statement=cmd)
         else:
-            Database.execute(db, cmd)
+            Database.execute(db=db, cmd=cmd)
 
     @classmethod
     def create_partition(cls, db: str, name: str,
@@ -289,13 +283,7 @@ class Relvar:
         :param ids: A dictionary of {idnum: [attr_name, ...] } values
         :return: The relation defined by the empty relvar in the form: <heading> {}
         """
-        # A header is a bracketed list of attribute name pairs such as:
-        #   {WPT_number int, Lat string, Long string, Frequency double}
-        header = "{"
-        for a in attrs:
-            # We need to replace any spaces in an attribute name with underscores
-            header += f"{a.name.replace(' ', delim)} {a.type.replace(' ', delim)} "
-        header = header[:-1] + "}"  # Replace the trailing space with a closing bracket
+        h = header(attrs)
 
         # Now we make the list of identifiers such as:
         #   {WPT_number} {Lat Long}
@@ -309,8 +297,8 @@ class Relvar:
         id_list = id_list[:-1]
 
         # Build and execute the TclRAL command
-        cmd = f"relvar create {name} {header} {id_list}"
-        return Database.execute(db, cmd)
+        cmd = f"relvar create {name} {h} {id_list}"
+        return Database.execute(db=db, cmd=cmd)
 
     @classmethod
     def updateone(cls, db: str, relvar_name: str, id: Dict, update: Dict[str, Any]):
