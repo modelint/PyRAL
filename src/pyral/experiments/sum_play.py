@@ -1,5 +1,5 @@
 """
-div_play.py -- Play around with division
+sum_play.py -- Play around with summarization
 
 """
 # System
@@ -23,9 +23,9 @@ OWNERSHIP_i = namedtuple('OWNERSHIP_i', 'OwnerName DogName')
 pdb = "playdb"
 ddb = "dogs"
 
-class DivTest:
+class SumTest:
     """
-    Test division example
+    Summarization example
     """
     @classmethod
     def play(cls):

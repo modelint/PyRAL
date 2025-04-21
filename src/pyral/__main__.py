@@ -2,11 +2,15 @@
 PyRAL
 
 """
+
+# System
 import logging
 import logging.config
 import sys
 import argparse
 from pathlib import Path
+
+# PyRAL
 from pyral import version
 
 _logpath = Path("pyral.log")
@@ -51,7 +55,10 @@ def main():
     if args.test:
         # from print_table import TableTest
         from pyral.experiments.div_play import DivTest
-        DivTest.play()
+        # DivTest.play()
+        # DivTest.dogs()
+        from pyral.experiments.dogs_example import Dogs
+        Dogs.setup()
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     print("\nNo problemo")
