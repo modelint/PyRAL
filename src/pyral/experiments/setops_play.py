@@ -7,7 +7,6 @@ from collections import namedtuple
 
 # PyRAL
 from pyral.database import Database
-from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.rtypes import Attribute, SetOp
 
