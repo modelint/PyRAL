@@ -56,8 +56,8 @@ def main():
         # from print_table import TableTest
         # from pyral.experiments.div_play import DivTest
         # from pyral.experiments.sum_play import SumTest
-        from pyral.experiments.setops_play import SetOp
-        SetOp.setup()
+        from pyral.experiments.setops_play import SetPlay
+        SetPlay.setup()
         # SumTest.setup()
         # DivTest.play()
         # DivTest.dogs()

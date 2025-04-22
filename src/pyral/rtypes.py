@@ -10,6 +10,16 @@ Attribute = namedtuple('_Attribute', 'name type')
 RelationValue = namedtuple('RelationValue', 'name header body')
 delim = '_' # TclRAL delimiter that replaces a space delimiter
 
+class SetOp(Enum):
+    subset = 'subsetof'
+    superset = 'supersetof'
+    psubset = 'propersubsetof'
+    psuperset = 'propersupersetof'
+    eq = 'equal'
+    equal = 'equal'
+    neq = 'notequal'
+    notequal = 'notequal'
+
 class Mult(Enum):
     AT_LEAST_ONE = '+'
     EXACTLY_ONE = '1'

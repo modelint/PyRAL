@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 
 # PyRAL
-from pyral.rtypes import RelationValue, Attribute, header, body
+from pyral.rtypes import RelationValue, Attribute, header, body, SetOp
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -25,10 +25,26 @@ _relation = r'^relation'  # Name of the latest relation result. Carat prevents n
 session_variable_names = set()  # Maintain a list of temporary variable names in use
 
 
+
+
 class Relation:
     """
     A relational value
     """
+
+    @classmethod
+    def set_compare(cls, db: str, rname2: str, op: SetOp, rname1: str = _relation) -> bool:
+        """
+
+        :param db: DB session name
+        :param rname1: If not specified, the previous relation result
+        :param rname2: Each rname must have the same header
+        :param op: A SetOp enumeration element defined in rtypes.py
+        :return: The boolean result of the set operation
+        """
+        cmd = f'relation is ${{{rname1}}} {op.value} ${rname2}'
+        result = bool(int(Database.execute(db=db, cmd=cmd)))
+        return result
 
     @classmethod
     def create(cls, db: str, attrs: List[Attribute], tuples: List[namedtuple],
