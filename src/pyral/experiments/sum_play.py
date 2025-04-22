@@ -14,46 +14,28 @@ from pyral.rtypes import Attribute
 
 
 Flow_Dependency_i = namedtuple('Flow_Dependency_i', 'From_action To_action')
-Actionfa_i = namedtuple('Actionfa_i', 'From_action')
+Actionta_i = namedtuple('Actionta_i', 'To_action')
 Action_i = namedtuple('Action_i', 'ID')
-DOG_i = namedtuple('DOG_i', 'DogName')
-OWNER_i = namedtuple('OWNER_i', 'OwnerName')
-OWNERSHIP_i = namedtuple('OWNERSHIP_i', 'OwnerName DogName')
 
-pdb = "playdb"
-ddb = "dogs"
+fdb = "fdb"  # Flow database example
 
 class SumTest:
     """
     Summarization example
     """
-    @classmethod
-    def play(cls):
 
-        Database.open_session(name=pdb)
-        Relvar.create_relvar(db=pdb, name='Action', attrs=[Attribute('ID', 'string')], ids={1: ['ID']})
-        Relvar.create_relvar(db=pdb, name='Flow_Dependency', attrs=[
+    @classmethod
+    def setup(cls):
+        """
+        Initialize the example
+        """
+        Database.open_session(name=fdb)
+        Relvar.create_relvar(db=fdb, name='Flow_Dependency', attrs=[
             Attribute('From_action', 'string'),
             Attribute('To_action', 'string'),
         ], ids={1: ['From_action', 'To_action']})
 
-        Relvar.insert(db=pdb, relvar='Action', tuples=[
-            Action_i(ID="ACTN1"),
-            Action_i(ID="ACTN2"),
-            Action_i(ID="ACTN3"),
-            Action_i(ID="ACTN4"),
-            Action_i(ID="ACTN5"),
-            Action_i(ID="ACTN6"),
-            Action_i(ID="ACTN7"),
-            Action_i(ID="ACTN8"),
-            Action_i(ID="ACTN9"),
-            Action_i(ID="ACTN10"),
-            Action_i(ID="ACTN11"),
-            Action_i(ID="ACTN12"),
-            Action_i(ID="ACTN13"),
-        ])
-
-        Relvar.insert(db=pdb, relvar='Flow_Dependency', tuples=[
+        Relvar.insert(db=fdb, relvar='Flow_Dependency', tuples=[
             Flow_Dependency_i(From_action="ACTN1", To_action="ACTN4"),
             Flow_Dependency_i(From_action="ACTN1", To_action="ACTN2"),
             Flow_Dependency_i(From_action="ACTN2", To_action="ACTN3"),
@@ -68,89 +50,38 @@ class SumTest:
             Flow_Dependency_i(From_action="ACTN10", To_action="ACTN11"),
             Flow_Dependency_i(From_action="ACTN11", To_action="ACTN13"),
             Flow_Dependency_i(From_action="ACTN11", To_action="ACTN12"),
-            ])
+        ])
 
+        Relvar.printall(fdb)
 
-        Relvar.printall(pdb)
-
-        Relation.create(db=pdb, attrs=[Attribute(name="From_action", type="string")],
-                                 tuples=[
-                                     Actionfa_i(From_action="ACTN1"),
-                                     Actionfa_i(From_action="ACTN10"),
-                                     Actionfa_i(From_action="ACTN8"),
-                                 ], svar_name="upstream")
-
-        Relation.print(db=pdb, variable_name="upstream")
-
-        j = Relation.join(db=pdb, rname2="Flow_Dependency", rname1="upstream")
-        ds = Relation.project(db=pdb, attributes=("To_action",), svar_name="downstream")
-
-        Relation.print(db=pdb, variable_name="downstream")
-        Relation.join(db=pdb, rname2="Flow_Dependency", rname1="downstream", svar_name="relevant")
-        Relation.print(db=pdb, variable_name="relevant")
-        Relation.rename(db=pdb, names={"From_action": "X"}, svar_name="mediator")
-        Relation.rename(db=pdb, relation="upstream", names={"From_action": "X"}, svar_name="divisor")
-        Relation.print(db=pdb, variable_name="divisor")
-        Relation.print(db=pdb, variable_name="mediator")
-
-        pass
-
-
-
-        result = Relation.divide(db=pdb, dividend="downstream", divisor="divisor", mediator="mediator")
-
-
-        pass
+        cls.play()
 
     @classmethod
-    def dogs(cls):
-        Database.open_session(name=ddb)
-        Relvar.create_relvar(db=ddb, name="DOG", attrs=[
-            Attribute(name="DogName", type="string")
-        ], ids={1: ["DogName"]})
-        Relvar.create_relvar(db=ddb, name="OWNER", attrs=[
-            Attribute(name="OwnerName", type="string"),
-            # Attribute(name="Age", type="int"),
-            # Attribute(name="City", type="string"),
-        ], ids={1: ["OwnerName"]})
-        Relvar.create_relvar(db=ddb, name="OWNERSHIP", attrs=[
-            Attribute(name="DogName", type="string"),
-            Attribute(name="OwnerName", type="string")
-        ], ids={1: ["OwnerName", "DogName"]})
-        Relvar.insert(db=ddb, relvar='DOG', tuples=[
-            DOG_i(DogName="Fido"),
-            DOG_i(DogName="Sam"),
-            DOG_i(DogName="Spot"),
-            DOG_i(DogName="Rover"),
-            DOG_i(DogName="Fred"),
-            DOG_i(DogName="Jumper"),
-        ])
-        Relvar.insert(db=ddb, relvar='OWNER', tuples=[
-            OWNER_i(OwnerName="Sue"),
-            OWNER_i(OwnerName="George"),
-            OWNER_i(OwnerName="Alice"),
-            OWNER_i(OwnerName="Mike"),
-            OWNER_i(OwnerName="Jim"),
-        ])
-        Relvar.insert(db=ddb, relvar='OWNERSHIP', tuples=[
-            OWNERSHIP_i(OwnerName="Sue", DogName="Fido"),
-            OWNERSHIP_i(OwnerName="Sue", DogName="Sam"),
-            OWNERSHIP_i(OwnerName="George", DogName="Fido"),
-            # OWNERSHIP_i(OwnerName="George", DogName="Sam"),
-            OWNERSHIP_i(OwnerName="Alice", DogName="Spot"),
-            OWNERSHIP_i(OwnerName="Mike", DogName="Rover"),
-            OWNERSHIP_i(OwnerName="Jim", DogName="Fred"),
-        ])
-        Relation.project(db=ddb, relation="DOG", attributes=("DogName",), svar_name="dividend")
-        Relation.print(db=ddb, variable_name="dividend")
+    def play(cls):
 
-        R = f"OwnerName:<{'George'}> OR OwnerName:<{'Sue'}>"
-        Relation.restrict(db=ddb, relation='OWNER', restriction=R)
-        Relation.project(db=ddb,attributes=("OwnerName", ), svar_name="divisor")
-        Relation.print(db=ddb, variable_name="divisor")
+        Relation.create(db=fdb, attrs=[Attribute(name="ID", type="string")],
+                        tuples=[
+                            Action_i(ID="ACTN1"),
+                            Action_i(ID="ACTN10"),
+                            Action_i(ID="ACTN8"),
+                        ], svar_name="xactions")
+        Relation.print(db=fdb, variable_name="xactions")
 
-        Relation.project(db=ddb, relation="OWNERSHIP", attributes=("OwnerName", "DogName"), svar_name="mediator")
-        Relation.print(db=ddb, variable_name="mediator")
+        Relation.join(db=fdb, rname1="Flow_Dependency", rname2="xactions", attrs={"From_action":"ID"}, svar_name="iflows")
+        Relation.print(db=fdb, variable_name="iflows")
+        pass
 
-        Relation.divide(db=ddb, dividend="dividend", divisor="divisor", mediator="mediator", svar_name="quotient")
-        Relation.print(db=ddb, variable_name="quotient")
+        Relation.project(db=fdb, attributes=("To_action",), relation="iflows", svar_name="downstream")
+        Relation.print(db=fdb, variable_name="downstream")
+
+        R = f"To_action:<ACTN9>"
+        Relation.restrict(db=fdb, relation='downstream', restriction=R, svar_name="ds_tup")
+        Relation.print(db=fdb, variable_name="ds_tup")
+
+        Relation.join(db=fdb, rname2="Flow_Dependency", rname1="ds_tup")
+        Relation.project(db=fdb, attributes=("From_action",), svar_name="up1")
+        Relation.print(db=fdb, variable_name="up1")
+        Relation.raw(db=fdb, cmd_str="relation rename $Flow_Dependency From_action Hello", svar_name="test")
+        Relation.print(db=fdb, variable_name="test")
+
+

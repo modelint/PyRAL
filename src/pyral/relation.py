@@ -422,6 +422,19 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
+    def raw(cls, db: str, cmd_str: str, relation: str = _relation,
+                svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Passes tcl cmd txt straight through, but uses the variable and relation
+        naming mechanism to pipeline input and output like all other commands
+        """
+        cmd = f'set {_relation} [{cmd_str}]'
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
+
+    @classmethod
     def project(cls, db: str, attributes: Tuple[str, ...], relation: str = _relation,
                 svar_name: Optional[str] = None) -> RelationValue:
         """

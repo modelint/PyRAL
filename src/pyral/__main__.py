@@ -54,11 +54,13 @@ def main():
     #     SumTest.do_r()
     if args.test:
         # from print_table import TableTest
-        from pyral.experiments.div_play import DivTest
+        # from pyral.experiments.div_play import DivTest
+        from pyral.experiments.sum_play import SumTest
+        SumTest.setup()
         # DivTest.play()
         # DivTest.dogs()
-        from pyral.experiments.dogs_example import Dogs
-        Dogs.setup()
+        # from pyral.experiments.dogs_example import Dogs
+        # Dogs.setup()
 
     logger.info("No problemo")  # We didn't die on an exception, basically
     print("\nNo problemo")
