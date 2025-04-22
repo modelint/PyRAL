@@ -84,7 +84,11 @@ class SumTest:
         # Then test to see if this set is a subset of the xactions
         # If so, the downstream action has all dependencies fulfilled and can now execute (true)
         # Otherwise, there are some required input actions that have not just executed
-        Relation.raw(db=fdb, cmd_str="relation summarizeby $required_inputs To_action s Can_execute boolean {[relation is [relation project [relation join $required_inputs $s] From_action] subsetof $xactions]}", svar_name="c")
+        Relation.raw(
+            db=fdb, cmd_str=r"relation summarizeby $required_inputs To_action s Can_execute boolean {\
+            [relation is [relation project [relation join $required_inputs $s] From_action] subsetof $xactions]}",
+            svar_name="c"
+        )
         Relation.print(db=fdb, variable_name="c")
 
 

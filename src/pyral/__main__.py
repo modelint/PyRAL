@@ -55,8 +55,10 @@ def main():
     if args.test:
         # from print_table import TableTest
         # from pyral.experiments.div_play import DivTest
-        from pyral.experiments.sum_play import SumTest
-        SumTest.setup()
+        # from pyral.experiments.sum_play import SumTest
+        from pyral.experiments.setops_play import SetOp
+        SetOp.setup()
+        # SumTest.setup()
         # DivTest.play()
         # DivTest.dogs()
         # from pyral.experiments.dogs_example import Dogs
