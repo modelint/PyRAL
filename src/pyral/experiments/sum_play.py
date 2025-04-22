@@ -78,7 +78,13 @@ class SumTest:
         Relation.join(db=fdb, rname1="Flow_Dependency", rname2="downstream", svar_name="required_inputs")
         Relation.print(db=fdb, variable_name="required_inputs")
 
-        Relation.raw(db=fdb, cmd_str="relation summarizeby $required_inputs To_action s canexecute boolean {[relation is [relation project [relation join $required_inputs $s] From_action] subsetof $xactions]}", svar_name="c")
+        # Add a boolean attribute named Can_execute
+        # For each downstream action (per To_action) join it back to required inputs, projecting on the From_action
+        # This yields the set of upstream executed actions for that one downstream action
+        # Then test to see if this set is a subset of the xactions
+        # If so, the downstream action has all dependencies fulfilled and can now execute (true)
+        # Otherwise, there are some required input actions that have not just executed
+        Relation.raw(db=fdb, cmd_str="relation summarizeby $required_inputs To_action s Can_execute boolean {[relation is [relation project [relation join $required_inputs $s] From_action] subsetof $xactions]}", svar_name="c")
         Relation.print(db=fdb, variable_name="c")
 
 
