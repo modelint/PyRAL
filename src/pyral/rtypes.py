@@ -10,6 +10,11 @@ Attribute = namedtuple('_Attribute', 'name type')
 RelationValue = namedtuple('RelationValue', 'name header body')
 delim = '_' # TclRAL delimiter that replaces a space delimiter
 
+# Commands
+JoinCmd = namedtuple('JoinCmd', 'rname1 rname2 attrs')
+SetCompareCmd = namedtuple('SetCompareCmd', 'rname1 rname2 op')
+ProjectCmd = namedtuple('ProjectCmd', 'relation attributes')
+
 class SetOp(Enum):
     subset = 'subsetof'
     superset = 'supersetof'

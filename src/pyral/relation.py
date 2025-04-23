@@ -25,15 +25,69 @@ _relation = r'^relation'  # Name of the latest relation result. Carat prevents n
 session_variable_names = set()  # Maintain a list of temporary variable names in use
 
 
-
-
 class Relation:
     """
     A relational value
     """
 
     @classmethod
-    def set_compare(cls, db: str, rname2: str, op: SetOp, rname1: str = _relation) -> bool:
+    def sumby(cls, db: str, per_attr: str, ext_attr: Attribute, sum_expr, relation: str = _relation, svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Attempt at improving and replacing summarizeby with embedded functions
+
+        :param db: DB session name
+        :param relation:
+        :param attrs:
+        :param sum_attr:
+        :param op:
+        :param svar_name:
+        :return:
+        """
+        pass
+
+
+    @classmethod
+    def build_expr(cls, db: str, commands) -> str:
+        """
+        Builds a nested TclRAL expression command for use with summarize
+
+        :param db:
+        :param commands:
+        :return:
+        """
+        for c in reversed(commands):
+            match type(c).__name__:
+                case "SetCompareCmd":
+                    cmd = cls._cmd_set_compare(rname1=c.rname1, rname2=c.rname2, op=c.op)
+                case "ProjectCmd":
+                    cmd = cls._cmd_project(relation=c.relation, attributes=c.attributes)
+                    pass
+                case "JoinCmd":
+                    cmd = cls._cmd_join(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs)
+                    pass
+        pass
+        return ""
+
+
+    @classmethod
+    def _cmd_set_compare(cls, rname1: str, rname2: str, op: SetOp) -> str:
+        rname1 = _relation if rname1 == "^" else rname1
+        return f'relation is ${{{rname1}}} {op.value} ${rname2}'
+
+    @classmethod
+    def _cmd_project(cls, relation: str, attributes) -> str:
+        relation = _relation if relation == "^" else relation
+        return f"relation project ${{{relation}}} {' '.join(attributes)}"
+
+    @classmethod
+    def _cmd_join(cls, rname1: str, rname2: str, attrs) -> str:
+        rname1 = _relation if rname1 == "^" else rname1
+        using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
+        return f"relation join ${{{rname1}}} ${rname2}{using}"
+
+
+    @classmethod
+    def set_compare(cls, db: str, rname1: str, rname2: str, op: SetOp) -> bool:
         """
 
         :param db: DB session name
@@ -42,7 +96,7 @@ class Relation:
         :param op: A SetOp enumeration element defined in rtypes.py
         :return: The boolean result of the set operation
         """
-        cmd = f'relation is ${{{rname1}}} {op.value} ${rname2}'
+        cmd = cls._cmd_set_compare(rname1=rname1, rname2=rname2, op=op)
         result = bool(int(Database.execute(db=db, cmd=cmd)))
         return result
 
@@ -129,7 +183,7 @@ class Relation:
         return attr_list[:-1] + "}"
 
     @classmethod
-    def join(cls, db: str, rname2: str, rname1: str = _relation, attrs: Dict[str, str] = {},
+    def join(cls, db: str, rname1: str, rname2: str, attrs: Dict[str, str] = {},
              svar_name: Optional[str] = None) -> RelationValue:
         """
         Perform a natural join on two relations using an optional attribute mapping. If no attributes are specified,
@@ -142,13 +196,14 @@ class Relation:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a TclRAL string
         """
-        cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}'
-        if attrs:
-            cmd += " -using " + cls.make_attr_list(attrs)
-        cmd += ']'
-        result = Database.execute(db, cmd)
+        cmd = f"set {{{_relation}}} [{cls._cmd_join(rname1=rname1, rname2=rname2, attrs=attrs)}]"
+        # cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}'
+        # if attrs:
+        #     cmd += " -using " + cls.make_attr_list(attrs)
+        # cmd += ']'
+        result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(db, svar_name)
+            cls.set_var(db=db, name=svar_name)
         return cls.make_pyrel(result)
 
     @classmethod
@@ -451,7 +506,7 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def project(cls, db: str, attributes: Tuple[str, ...], relation: str = _relation,
+    def project(cls, db: str, attributes: Tuple[str, ...], relation: str,
                 svar_name: Optional[str] = None) -> RelationValue:
         """
         Returns a relation whose heading consists of only a set of selected attributes.
@@ -464,11 +519,12 @@ class Relation:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a PyRAL relation value
         """
-        projection = ' '.join(attributes)
-        cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
-        result = Database.execute(db, cmd)
+        # projection = ' '.join(attributes)
+        cmd = f"set {_relation} [{cls._cmd_project(relation=relation, attributes=attributes)}]"
+        # cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
+        result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(db, svar_name)
+            cls.set_var(db=db, name=svar_name)
         return cls.make_pyrel(result)
 
     @classmethod
