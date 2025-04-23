@@ -70,24 +70,21 @@ class Relation:
 
 
     @classmethod
-    def _cmd_set_compare(cls, rname1: str, rname2: str, op: SetOp) -> str:
-        rname1 = _relation if rname1 == "^" else rname1
+    def _cmd_set_compare(cls, rname2: str, op: SetOp, rname1: str = _relation) -> str:
         return f'relation is ${{{rname1}}} {op.value} ${rname2}'
 
     @classmethod
-    def _cmd_project(cls, relation: str, attributes) -> str:
-        relation = _relation if relation == "^" else relation
+    def _cmd_project(cls, attributes, relation: str = _relation) -> str:
         return f"relation project ${{{relation}}} {' '.join(attributes)}"
 
     @classmethod
-    def _cmd_join(cls, rname1: str, rname2: str, attrs) -> str:
-        rname1 = _relation if rname1 == "^" else rname1
+    def _cmd_join(cls, rname2: str, attrs, rname1: str = _relation) -> str:
         using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
         return f"relation join ${{{rname1}}} ${rname2}{using}"
 
 
     @classmethod
-    def set_compare(cls, db: str, rname1: str, rname2: str, op: SetOp) -> bool:
+    def set_compare(cls, db: str, rname2: str, op: SetOp, rname1: str = _relation) -> bool:
         """
 
         :param db: DB session name
@@ -183,7 +180,7 @@ class Relation:
         return attr_list[:-1] + "}"
 
     @classmethod
-    def join(cls, db: str, rname1: str, rname2: str, attrs: Dict[str, str] = {},
+    def join(cls, db: str, rname2: str, attrs: Optional[Dict[str, str]] = None, rname1: str = _relation,
              svar_name: Optional[str] = None) -> RelationValue:
         """
         Perform a natural join on two relations using an optional attribute mapping. If no attributes are specified,
@@ -196,6 +193,8 @@ class Relation:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a TclRAL string
         """
+        if attrs is None:
+            attrs = {}
         cmd = f"set {{{_relation}}} [{cls._cmd_join(rname1=rname1, rname2=rname2, attrs=attrs)}]"
         # cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}'
         # if attrs:
@@ -506,7 +505,7 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def project(cls, db: str, attributes: Tuple[str, ...], relation: str,
+    def project(cls, db: str, attributes: Tuple[str, ...], relation: str = _relation,
                 svar_name: Optional[str] = None) -> RelationValue:
         """
         Returns a relation whose heading consists of only a set of selected attributes.

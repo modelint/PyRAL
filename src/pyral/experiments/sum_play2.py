@@ -99,8 +99,8 @@ class SumTest2:
 
         sum_expr = Relation.build_expr(db=fdb, commands=[
             JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
-            ProjectCmd(relation="^", attributes=("From_action",)),
-            SetCompareCmd(rname1="^", rname2="xactions", op=SetOp.subset)
+            ProjectCmd(attributes=("From_action",)),
+            SetCompareCmd(rname2="xactions", op=SetOp.subset)
         ])
 
         # Relation.join(db=fdb, rname2="required_inputs", rname1="s")
