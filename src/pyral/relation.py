@@ -105,19 +105,27 @@ class Relation:
         :param commands:
         :return:
         """
+
+        # Here is each named tuple defining a Relation method that can be built into an expression
+        relation_method = {
+            "SetCompareCmd": lambda c: cls._cmd_set_compare(rname1=c.rname1, rname2=c.rname2, op=c.op),
+            "ProjectCmd": lambda c: cls._cmd_project(relation=c.relation, attributes=c.attributes),
+            "JoinCmd": lambda c: cls._cmd_join(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs),
+        }
+
+        # Now we create a list of command strings in reverse order
+        # This order makes it easy to nest the commands into a single TclRAL command string
         cmd_strings = []
         for c in reversed(commands):
-            match type(c).__name__:
-                case "SetCompareCmd":
-                    cmd = cls._cmd_set_compare(rname1=c.rname1, rname2=c.rname2, op=c.op)
-                case "ProjectCmd":
-                    cmd = cls._cmd_project(relation=c.relation, attributes=c.attributes)
-                case "JoinCmd":
-                    cmd = cls._cmd_join(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs)
+            tuple_name = type(c).__name__
+            try:
+                cmd = relation_method[tuple_name](c)
+            except KeyError:
+                raise ValueError(f"Unknown relation command namedtuple: {tuple_name}")
             cmd_strings.append(cmd)
 
-        flattened_expr = cls._expand_expr(cmd_strings)
-        return flattened_expr
+        # Now call this recursive function to perform command substitution and yield our single TclRAL command string
+        return cls._expand_expr(cmd_strings)
 
     @classmethod
     def _cmd_set_compare(cls, rname2: str, op: SetOp, rname1: Optional[str] = None) -> str:
