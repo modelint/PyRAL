@@ -71,7 +71,7 @@ class SumTest2:
 
         # Find all downstream dependencies
         Relation.join(db=fdb, rname1="Flow_Dependency", rname2="xactions")
-        Relation.project(db=fdb, relation="^", attributes=("To_action",), svar_name="downstream")
+        Relation.project(db=fdb, attributes=("To_action",), svar_name="downstream")
         Relation.print(db=fdb, variable_name="downstream")
 
         # Find all required upstream inputs for the downstream actions
@@ -99,9 +99,10 @@ class SumTest2:
 
         sum_expr = Relation.build_expr(db=fdb, commands=[
             JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
-            ProjectCmd(attributes=("From_action",)),
-            SetCompareCmd(rname2="xactions", op=SetOp.subset)
+            ProjectCmd(attributes=("From_action",), relation=None),
+            SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
         ])
+        pass
 
         # Relation.join(db=fdb, rname2="required_inputs", rname1="s")
         # Relation.project(db=fdb, attributes=("From_action",))

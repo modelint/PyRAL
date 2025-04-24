@@ -45,6 +45,56 @@ class Relation:
         """
         pass
 
+    @classmethod
+    def _expand_expr(cls, cmd_strings: List[str]) -> str:
+        """
+        Collapse a list of TclRAL command strings into a single string with nested commands.
+
+        For example, these three input cmd_strings:
+
+            0 'relation is ${^relation} subsetof $xactions'
+            1 'relation project ${^relation} From_action'
+            2 'relation join ${s} $required_inputs'
+
+        Collapse into this returned command string:
+
+            'relation is [relation project [relation join ${s} $required_inputs] From_action] subsetof $xactions'
+
+        Expression expansion is indicated by the _relation variable which contains the TclRAL variable name
+        representing the output yield by the previously executed command. As of this writing, the variable name
+        is: ${^relation}
+
+        The first command in the list contains the text _relation value somewhere in the string
+
+        We need to replace this value with the next command string surrounded in brackets [<command_string>].
+        But, unless that command is the last one in the list, it too will contain the _relation text,
+        requiring further expansion.
+
+        So we descend recursively until we hit the bottom command. There we simply return the command text surrounded
+        in brackets replacing as we go for each _relation occurence moving back up the stack.
+
+        :param cmd_strings: A list of TclRAL command strings in reverse nesting order
+        :return: The fully expanded TclRAL command with all _relation occcurences replaced
+        """
+        # Ensure that we have either started with at least one command or that we haven't
+        # somehow recursed beyond the end of the original command list
+        if len(cmd_strings) < 1:
+            raise ValueError("At least one command must be specified for expression expansion.")
+
+        # If we have reached the last command, there is no further recursion and we just return the command string
+        if len(cmd_strings) == 1:  # Last one, cannot flatten any further, so just return it
+            if _relation in cmd_strings[0]:
+                raise ValueError(f"Final command: [{cmd_strings[0]}] must not contain substitution marker: {_relation}")
+            return cmd_strings[0]
+
+        # There should be exactly one appearance of the _relation
+        if _relation in cmd_strings[0]:
+            r_expr = cls._expand_expr(cmd_strings[1:])
+            expansion = cmd_strings[0].replace(f"${{{_relation}}}", f"[{r_expr}]", 1)
+            return expansion
+        else:
+            raise ValueError(f"Non-final command: [{cmd_strings[0]}] must contain substitution marker: {_relation}")
+
 
     @classmethod
     def build_expr(cls, db: str, commands) -> str:
@@ -55,30 +105,36 @@ class Relation:
         :param commands:
         :return:
         """
+        cmd_strings = []
         for c in reversed(commands):
             match type(c).__name__:
                 case "SetCompareCmd":
                     cmd = cls._cmd_set_compare(rname1=c.rname1, rname2=c.rname2, op=c.op)
                 case "ProjectCmd":
                     cmd = cls._cmd_project(relation=c.relation, attributes=c.attributes)
-                    pass
                 case "JoinCmd":
                     cmd = cls._cmd_join(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs)
-                    pass
-        pass
-        return ""
+            cmd_strings.append(cmd)
 
+        flattened_expr = cls._expand_expr(cmd_strings)
+        return flattened_expr
 
     @classmethod
-    def _cmd_set_compare(cls, rname2: str, op: SetOp, rname1: str = _relation) -> str:
+    def _cmd_set_compare(cls, rname2: str, op: SetOp, rname1: Optional[str] = None) -> str:
+        if rname1 is None:
+            rname1 = _relation
         return f'relation is ${{{rname1}}} {op.value} ${rname2}'
 
     @classmethod
-    def _cmd_project(cls, attributes, relation: str = _relation) -> str:
+    def _cmd_project(cls, attributes, relation: Optional[str] = None) -> str:
+        if relation is None:
+            relation = _relation
         return f"relation project ${{{relation}}} {' '.join(attributes)}"
 
     @classmethod
-    def _cmd_join(cls, rname2: str, attrs, rname1: str = _relation) -> str:
+    def _cmd_join(cls, rname2: str, attrs, rname1: Optional[str] = None) -> str:
+        if rname1 is None:
+            rname1 = _relation
         using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
         return f"relation join ${{{rname1}}} ${rname2}{using}"
 
