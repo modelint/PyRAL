@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 
 # PyRAL
-from pyral.rtypes import RelationValue, Attribute, header, body, SetOp
+from pyral.rtypes import RelationValue, Attribute, header, body, SetOp, SumExpr
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -28,24 +28,29 @@ session_variable_names = set()  # Maintain a list of temporary variable names in
 class Relation:
     """
     A relational value
+    def sumby(cls, db: str, per_attrs: Tuple[str], ext_attr: Attribute, sum_expr: str, relation: str = _relation,
+              svar_name: Optional[str] = None) -> RelationValue:
     """
 
     @classmethod
-    def sumby(cls, db: str, per_attr: str, ext_attr: Attribute, sum_expr: str, relation: str = _relation,
+    def sumby(cls, db: str, per_attrs: Tuple[str], summaries: Tuple[SumExpr], relation: str = _relation,
               svar_name: Optional[str] = None) -> RelationValue:
         """
         Attempt at improving and replacing summarizeby with embedded functions
 
         :param db: DB session name
-        :param per_attr:
-        :param ext_attr:
-        :param sum_expr:
+        :param per_attrs:
+        :param summaries:
         :param relation:
         :param svar_name:
         :return:
         """
-        cmd = (f"set {_relation} [relation summarizeby ${{{relation}}} {per_attr} s "
-               f"{ext_attr.name} {ext_attr.type} {{[{sum_expr}]}}]")
+        sum_expr_strings = [f"{s.attr.name} {s.attr.type} {{[{s.expr}]}}" for s in summaries]
+        summaries_clause = ' '.join(sum_expr_strings)
+        # cmd = (f"set {_relation} [relation summarizeby ${{{relation}}} {{{' '.join(per_attrs)}}} s "
+        #        f"{summaries_clause}"
+        cmd = (f"set {_relation} [relation summarizeby ${{{relation}}} {{{' '.join(per_attrs)}}} s "
+               f"{summaries_clause}]")
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)

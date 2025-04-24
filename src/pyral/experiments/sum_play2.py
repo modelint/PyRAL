@@ -10,8 +10,7 @@ from pyral.database import Database
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from pyral.rtypes import Attribute, SetOp, JoinCmd, SetCompareCmd, ProjectCmd
-
+from pyral.rtypes import Attribute, SetOp, JoinCmd, SetCompareCmd, ProjectCmd, SumExpr
 
 Flow_Dependency_i = namedtuple('Flow_Dependency_i', 'From_action To_action')
 Actionf_i = namedtuple('Actionf_i', 'From_action')
@@ -19,6 +18,7 @@ Actionta_i = namedtuple('Actionta_i', 'To_action')
 Action_i = namedtuple('Action_i', 'ID')
 
 fdb = "fdb"  # Flow database example
+
 
 class SumTest2:
     """
@@ -59,7 +59,6 @@ class SumTest2:
 
     @classmethod
     def play(cls):
-
         # Specify a set of initial from actions that have completed execution
         Relation.create(db=fdb, attrs=[Attribute(name="From_action", type="string")],
                         tuples=[
@@ -91,8 +90,8 @@ class SumTest2:
             SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
         ])
 
-        Relation.sumby(db=fdb, relation="required_inputs", per_attr="To_action",
-                       ext_attr=Attribute(name="Can_execute", type="boolean"), sum_expr=sum_expr,
+        Relation.sumby(db=fdb, relation="required_inputs", per_attrs=("To_action",),
+                       summaries=(SumExpr(attr=Attribute(name="Can_execute", type="boolean"), expr=sum_expr),),
                        svar_name="solution")
 
         Relation.print(db=fdb, variable_name="solution")
