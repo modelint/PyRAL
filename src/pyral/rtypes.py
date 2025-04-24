@@ -17,6 +17,7 @@ SetCompareCmd = namedtuple('SetCompareCmd', 'rname1 rname2 op')
 ProjectCmd = namedtuple('ProjectCmd', 'relation attributes')
 
 
+Cardinality = "relation cardinality $s"
 
 
 class SetOp(Enum):

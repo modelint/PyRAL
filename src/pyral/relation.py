@@ -33,7 +33,7 @@ class Relation:
     """
 
     @classmethod
-    def sumby(cls, db: str, per_attrs: Tuple[str], summaries: Tuple[SumExpr], relation: str = _relation,
+    def sumby(cls, db: str, per_attrs: Tuple[str, ...], summaries: Tuple[SumExpr], relation: str = _relation,
               svar_name: Optional[str] = None) -> RelationValue:
         """
         Attempt at improving and replacing summarizeby with embedded functions
@@ -169,7 +169,6 @@ class Relation:
             rname1 = _relation
         using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
         return f"relation join ${{{rname1}}} ${rname2}{using}"
-
 
     @classmethod
     def set_compare(cls, db: str, rname2: str, op: SetOp, rname1: str = _relation) -> bool:
