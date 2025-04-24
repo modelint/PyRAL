@@ -31,19 +31,25 @@ class Relation:
     """
 
     @classmethod
-    def sumby(cls, db: str, per_attr: str, ext_attr: Attribute, sum_expr, relation: str = _relation, svar_name: Optional[str] = None) -> RelationValue:
+    def sumby(cls, db: str, per_attr: str, ext_attr: Attribute, sum_expr: str, relation: str = _relation,
+              svar_name: Optional[str] = None) -> RelationValue:
         """
         Attempt at improving and replacing summarizeby with embedded functions
 
         :param db: DB session name
+        :param per_attr:
+        :param ext_attr:
+        :param sum_expr:
         :param relation:
-        :param attrs:
-        :param sum_attr:
-        :param op:
         :param svar_name:
         :return:
         """
-        pass
+        cmd = (f"set {_relation} [relation summarizeby ${{{relation}}} {per_attr} s "
+               f"{ext_attr.name} {ext_attr.type} {{[{sum_expr}]}}]")
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
 
     @classmethod
     def _expand_expr(cls, cmd_strings: List[str]) -> str:
@@ -97,11 +103,24 @@ class Relation:
 
 
     @classmethod
-    def build_expr(cls, db: str, commands) -> str:
+    def build_expr(cls, commands) -> str:
         """
         Builds a nested TclRAL expression command for use with summarize
 
-        :param db:
+        For example, let's say we want to combine this list of PyRAL Relation commands
+        into a single TclRAL expression:
+
+            Relation.join(db=fdb, rname2="required_inputs", rname1="s")
+            Relation.project(db=fdb, attributes=("From_action",))
+            Relation.set_compare(db=fdb, rname2="xactions", op=SetOp.subset)
+
+        We will receive these as a list of corresponding namedtuples:
+
+            JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
+            ProjectCmd(attributes=("From_action",), relation=None),
+            SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
+
+
         :param commands:
         :return:
         """
@@ -125,7 +144,7 @@ class Relation:
             cmd_strings.append(cmd)
 
         # Now call this recursive function to perform command substitution and yield our single TclRAL command string
-        return cls._expand_expr(cmd_strings)
+        return cls._expand_expr(cmd_strings)  # TODO: need to specify the db
 
     @classmethod
     def _cmd_set_compare(cls, rname2: str, op: SetOp, rname1: Optional[str] = None) -> str:
@@ -669,7 +688,7 @@ class Relation:
                f"{sum_attr.name} {sum_attr.type} {{[relation cardinality $s]}}]")
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(db, svar_name)
+            cls.set_var(db=db, name=svar_name)
         return cls.make_pyrel(result)
 
 

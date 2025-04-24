@@ -97,18 +97,23 @@ class SumTest2:
                         ], svar_name="s")
         Relation.print(db=fdb, variable_name="s")
 
-        sum_expr = Relation.build_expr(db=fdb, commands=[
+        sum_expr = Relation.build_expr(commands=[
             JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
             ProjectCmd(attributes=("From_action",), relation=None),
             SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
         ])
+
+        Relation.sumby(db=fdb, relation="required_inputs", per_attr="To_action",
+                       ext_attr=Attribute(name="Can_execute", type="boolean"), sum_expr=sum_expr,
+                       svar_name="solution")
+
+        Relation.print(db=fdb, variable_name="solution")
         pass
 
         # Relation.join(db=fdb, rname2="required_inputs", rname1="s")
         # Relation.project(db=fdb, attributes=("From_action",))
         # Relation.set_compare(db=fdb, rname2="xactions", op=SetOp.subset)
 
-
-# relation join ${s} $required_inputs'
-# relation project ${^relation} From_action'
-# relation is ${^relation} subsetof $xactions'
+        # relation join ${s} $required_inputs'
+        # relation project ${^relation} From_action'
+        # relation is ${^relation} subsetof $xactions'
