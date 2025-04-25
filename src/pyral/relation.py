@@ -33,10 +33,10 @@ class Relation:
     """
 
     @classmethod
-    def sumby(cls, db: str, per_attrs: Tuple[str, ...], summaries: Tuple[SumExpr], relation: str = _relation,
+    def summarize(cls, db: str, per_attrs: Tuple[str, ...], summaries: Tuple[SumExpr], relation: str = _relation,
               svar_name: Optional[str] = None) -> RelationValue:
         """
-        Attempt at improving and replacing summarizeby with embedded functions
+        Full implementation of summarize/summarizeby
 
         :param db: DB session name
         :param per_attrs:
@@ -626,6 +626,8 @@ class Relation:
     def summarizeby(cls, db: str, relation: str, attrs: List[str], sum_attr: Attribute, op='count',
                     svar_name: Optional[str] = None) -> RelationValue:
         """
+        DEPRECATED
+
         Only one summarization operation supported by PyRAL at the moment - count
         :param db: DB session name
         :param relation:

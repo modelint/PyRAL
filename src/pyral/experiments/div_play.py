@@ -152,5 +152,5 @@ class DivTest:
         Relation.project(db=ddb, relation="OWNERSHIP", attributes=("OwnerName", "DogName"), svar_name="mediator")
         Relation.print(db=ddb, variable_name="mediator")
 
-        Relation.divide(db=ddb, dividend="dividend", divisor="divisor", mediator="mediator", svar_name="quotient")
+        q = Relation.divide(db=ddb, dividend="dividend", divisor="divisor", mediator="mediator", svar_name="quotient")
         Relation.print(db=ddb, variable_name="quotient")
