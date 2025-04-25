@@ -54,16 +54,11 @@ def main():
     #     SumTest.do_r()
     if args.test:
         # from print_table import TableTest
-        from pyral.experiments.div_play import DivTest
         # from pyral.experiments.sum_play import SumTest
-        # from pyral.experiments.sum_play2 import SumTest2
-        # from pyral.experiments.sum_play3 import SumTest3
+        from pyral.experiments.sum_play2 import SumTest2
         # from pyral.experiments.setops_play import SetPlay
         # SetPlay.setup()
-        # SumTest2.setup()
-        # SumTest3.setup()
-        # DivTest.play()
-        DivTest.dogs()
+        SumTest2.setup()
         # from pyral.experiments.dogs_example import Dogs
         # Dogs.setup()
 

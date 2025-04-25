@@ -90,7 +90,7 @@ class SumTest2:
             SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
         ])
 
-        Relation.sumby(db=fdb, relation="required_inputs", per_attrs=("To_action",),
+        s = Relation.summarize(db=fdb, relation="required_inputs", per_attrs=("To_action",),
                        summaries=(SumExpr(attr=Attribute(name="Can_execute", type="boolean"), expr=sum_expr),),
                        svar_name="solution")
 
