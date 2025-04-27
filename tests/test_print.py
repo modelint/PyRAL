@@ -64,6 +64,24 @@ def test_intersect(aircraft_db):
     assert b == expected
     Relation.relformat(b)
 
+def test_union(aircraft_db):
+    R = f"ID:<N1397Q>"
+    Relation.restrict(db=aircraft_db, relation='Aircraft', restriction=R)
+    Relation.project(db=aircraft_db, attributes=("ID",), svar_name="a")
+    R = f"ID:<N1309Z>"
+    Relation.restrict(db=aircraft_db, relation='Aircraft', restriction=R)
+    Relation.project(db=aircraft_db, attributes=("ID",), svar_name="b")
+    R = f"ID:<N5130B>"
+    Relation.restrict(db=aircraft_db, relation='Aircraft', restriction=R)
+    Relation.project(db=aircraft_db, attributes=("ID",), svar_name="c")
+    u = Relation.union(db=aircraft_db, relations=("a", "b", "c"))
+
+    expected = RelationValue(name='^relation',
+                             header={'ID': 'string'},
+                             body=[{'ID': 'N1397Q'}, {'ID': 'N1309Z'}, {'ID': 'N5130B'}])
+    Relation.relformat(u)
+    assert u == expected
+
 
 def test_join(aircraft_db):
     result = Relation.join(aircraft_db, rname2='Aircraft', rname1='Pilot',

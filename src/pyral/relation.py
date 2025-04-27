@@ -164,6 +164,11 @@ class Relation:
         return f"relation project ${{{relation}}} {' '.join(attributes)}"
 
     @classmethod
+    def _cmd_union(cls, relations) -> str:
+        rvars = [f"${r}" for r in relations]
+        return f'relation union {" ".join(rvars)}'
+
+    @classmethod
     def _cmd_join(cls, rname2: str, attrs, rname1: Optional[str] = None) -> str:
         if rname1 is None:
             rname1 = _relation
@@ -550,6 +555,29 @@ class Relation:
         brows = [list(row.values()) for row in rval.body]
         print(tabulate(tabular_data=brows, headers=attr_names,
                        tablefmt="outline"))  # That last parameter chooses our table style
+
+    @classmethod
+    def union(cls, db: str, relations: Tuple[str, ...], svar_name: Optional[str] = None) -> RelationValue:
+        """
+        The union subcommand returns the set union of two or more relations.
+        All relations must be of the same type.
+
+        The result relation has a heading that is the same as any of the arguments and
+        has a body consisting of all tuples present in any of the relationValue arguments.
+
+        Since the union operation is both associative and commutative, the order of the
+        relationValue arguments has no effect the result.
+
+        :param db: DB session name
+        :param relations: A tuple providing a
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a PyRAL relation value
+        """
+        cmd = f'set {_relation} [{cls._cmd_union(relations=relations)}]'
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
 
     @classmethod
     def divide(cls, db: str, dividend: str, divisor: str, mediator: str,
