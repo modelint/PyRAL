@@ -389,7 +389,7 @@ class Relation:
             relation intersect <relationValue1> <relationValue2>
 
         :param db: DB session name
-        :param op:  Comparision operation
+        :param op:  Comparison operation
         :param rname1:
         :param rname2:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
@@ -397,6 +397,20 @@ class Relation:
         """
         cmd = f'relation is ${{{rname1}}} {op} ${rname2}'
         result = bool(int(Database.execute(db, cmd)))
+        return result
+
+
+    @classmethod
+    def cardinality(cls, db:str, rname: str = _relation) -> int:
+        """
+        The cardinality subcommand returns the number tuples contained in the body of the relation.
+
+        :param db: DB session name
+        :param rname: The tuples in the body of this relation are counted
+        :return:
+        """
+        cmd = f'relation cardinality ${{{rname}}}'
+        result = int(Database.execute(db=db, cmd=cmd))
         return result
 
     @classmethod
@@ -563,7 +577,7 @@ class Relation:
         All relations must be of the same type.
 
         The result relation has a heading that is the same as any of the arguments and
-        has a body consisting of all tuples present in any of the relationValue arguments.
+        has a body consist of all tuples present in any of the relationValue arguments.
 
         Since the union operation is both associative and commutative, the order of the
         relationValue arguments has no effect the result.

@@ -35,5 +35,7 @@ def play():
     Relation.project(db=aircraft_db, attributes=("ID",), svar_name="c")
     Relation.union(db=aircraft_db, relations=("a", "b", "c"), svar_name="u")
 
+    c = Relation.cardinality(db=aircraft_db)
+
     Relation.print(db=aircraft_db, variable_name="u")
     pass

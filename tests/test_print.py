@@ -64,6 +64,10 @@ def test_intersect(aircraft_db):
     assert b == expected
     Relation.relformat(b)
 
+def test_cardinality(aircraft_db):
+    c = Relation.cardinality(db=aircraft_db, rname="Aircraft")
+    assert c == 3
+
 def test_union(aircraft_db):
     R = f"ID:<N1397Q>"
     Relation.restrict(db=aircraft_db, relation='Aircraft', restriction=R)
