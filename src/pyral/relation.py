@@ -176,6 +176,13 @@ class Relation:
         return f"relation join ${{{rname1}}} ${rname2}{using}"
 
     @classmethod
+    def _cmd_semijoin(cls, rname2: str, attrs, rname1: Optional[str] = None) -> str:
+        if rname1 is None:
+            rname1 = _relation
+        using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
+        return f"relation semijoin ${{{rname1}}} ${rname2}{using}"
+
+    @classmethod
     def set_compare(cls, db: str, rname2: str, op: SetOp, rname1: str = _relation) -> bool:
         """
 
@@ -272,6 +279,49 @@ class Relation:
         return attr_list[:-1] + "}"
 
     @classmethod
+    def semijoin(cls, db: str, rname2: str, attrs: Optional[Dict[str, str]] = None, rname1: str = _relation,
+             svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Perform a semi join on two relations using an optional attribute mapping. If no attributes are specified,
+        the semi-join is performed on same named attributes.
+
+        :param db: DB session name
+        :param rname1: Name of one relvar to join
+        :param rname2: Name of the other relvar
+        :param attrs: Dictionary in format { r1.attr_name: r2.attr_name, ... }
+
+        :param db: DB session name
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return Resulting relation as a TclRAL string
+
+
+        ---
+        Copied from the TclRAL man page:
+
+        The semijoin subcommand computes the join of relationValue1 and relationValue2 but eliminates all of the
+        attributes of relationValue1 (or alternatively speaking, projecting all attributes of relationValue2).
+
+        The returned relation has a heading the same as relationValue2 and a body consisting of those tuples in
+        relationValue2 that would have been included in the natural join with relationValue1.
+        As with join, if the -using argument are missing, the join is computed across the attributes in
+        relationValue1 and relationValue2 that are named the same. Otherwise the attrList argument is treated
+        the same as for the join subcommand.
+
+        Also like the join subcommand, additional relationValue arguments may be given and the result is computed
+        in left to right order.
+
+        This implies that the type of the result is always the type of the right most relationValue.
+        N.B. the sense of this command is inverted from previous versions of this library.
+        """
+        if attrs is None:
+            attrs = {}
+        cmd = f"set {{{_relation}}} [{cls._cmd_semijoin(rname1=rname1, rname2=rname2, attrs=attrs)}]"
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
+
+    @classmethod
     def join(cls, db: str, rname2: str, attrs: Optional[Dict[str, str]] = None, rname1: str = _relation,
              svar_name: Optional[str] = None) -> RelationValue:
         """
@@ -288,10 +338,6 @@ class Relation:
         if attrs is None:
             attrs = {}
         cmd = f"set {{{_relation}}} [{cls._cmd_join(rname1=rname1, rname2=rname2, attrs=attrs)}]"
-        # cmd = f'set {{{_relation}}} [relation join ${{{rname1}}} ${rname2}'
-        # if attrs:
-        #     cmd += " -using " + cls.make_attr_list(attrs)
-        # cmd += ']'
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)

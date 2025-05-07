@@ -100,6 +100,15 @@ def test_join(aircraft_db):
     Relation.relformat(result)
     assert result == expected
 
+def test_semijoin(aircraft_db):
+    result = Relation.semijoin(db=aircraft_db, rname1='Pilot', rname2='Aircraft', attrs={'Tailnumber': 'ID'})
+    expected = RelationValue(name='^relation',
+                             header={'ID': 'string', 'Altitude': 'int', 'Heading': 'int'},
+                             body=[{'ID': 'N1397Q', 'Altitude': '13275', 'Heading': '320'},
+                                   {'ID': 'N5130B', 'Altitude': '8159', 'Heading': '90'}])
+    Relation.relformat(result)
+    assert result == expected
+
 
 def test_selectid_found(aircraft_db):
     result = Relvar.select_id(aircraft_db, relvar_name='Aircraft', tid={'ID': 'N1397Q'})
