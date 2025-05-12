@@ -596,7 +596,7 @@ class Relation:
         :param table_name:  If supplied, this name is used instead of the variable name to name the printed table
         """
         # convert the TclRAL string value held in the session variable into a PyRAL relation and print it
-        rval = cls.make_pyrel(relation=cls.get_rval_string(db, variable_name),
+        rval = cls.make_pyrel(relation=cls.get_rval_string(db=db, variable_name=snake(variable_name)),
                               name=table_name if table_name else variable_name)
         cls.relformat(rval)
 

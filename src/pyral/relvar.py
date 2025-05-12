@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 from pyral.database import Database
 from pyral.transaction import Transaction
 from pyral.relation import Relation, _relation
-from pyral.rtypes import Attribute, Mult, delim, RelationValue, body, header
+from pyral.rtypes import Attribute, Mult, delim, RelationValue, body, header, snake
 from collections import namedtuple
 
 _logger = logging.getLogger(__name__)
@@ -202,7 +202,7 @@ class Relvar:
         b = body(tuples)
 
         # Start command with the relvar command prefix
-        cmd = f"relvar insert {relvar} {b}"
+        cmd = f"relvar insert {snake(relvar)} {b}"
 
         # Add to open transaction if tr_name is provided
         if tr:
@@ -297,7 +297,7 @@ class Relvar:
         id_list = id_list[:-1]
 
         # Build and execute the TclRAL command
-        cmd = f"relvar create {name} {h} {id_list}"
+        cmd = f"relvar create {snake(name)} {h} {id_list}"
         return Database.execute(db=db, cmd=cmd)
 
     @classmethod
