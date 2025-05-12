@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 
 # PyRAL
-from pyral.rtypes import RelationValue, Attribute, header, body, SetOp, SumExpr
+from pyral.rtypes import RelationValue, Attribute, header, body, SetOp, SumExpr, snake
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -155,17 +155,17 @@ class Relation:
     def _cmd_set_compare(cls, rname2: str, op: SetOp, rname1: Optional[str] = None) -> str:
         if rname1 is None:
             rname1 = _relation
-        return f'relation is ${{{rname1}}} {op.value} ${rname2}'
+        return f'relation is ${{{snake(rname1)}}} {op.value} ${snake(rname2)}'
 
     @classmethod
     def _cmd_project(cls, attributes, relation: Optional[str] = None) -> str:
         if relation is None:
             relation = _relation
-        return f"relation project ${{{relation}}} {' '.join(attributes)}"
+        return f"relation project ${{{snake(relation)}}} {' '.join(attributes)}"
 
     @classmethod
     def _cmd_union(cls, relations) -> str:
-        rvars = [f"${r}" for r in relations]
+        rvars = [f"${snake(r)}" for r in relations]
         return f'relation union {" ".join(rvars)}'
 
     @classmethod
@@ -173,14 +173,14 @@ class Relation:
         if rname1 is None:
             rname1 = _relation
         using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
-        return f"relation join ${{{rname1}}} ${rname2}{using}"
+        return f"relation join ${{{snake(rname1)}}} ${snake(rname2)}{using}"
 
     @classmethod
     def _cmd_semijoin(cls, rname2: str, attrs, rname1: Optional[str] = None) -> str:
         if rname1 is None:
             rname1 = _relation
         using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
-        return f"relation semijoin ${{{rname1}}} ${rname2}{using}"
+        return f"relation semijoin ${{{snake(rname1)}}} ${snake(rname2)}{using}"
 
     @classmethod
     def set_compare(cls, db: str, rname2: str, op: SetOp, rname1: str = _relation) -> bool:
@@ -192,7 +192,7 @@ class Relation:
         :param op: A SetOp enumeration element defined in rtypes.py
         :return: The boolean result of the set operation
         """
-        cmd = cls._cmd_set_compare(rname1=rname1, rname2=rname2, op=op)
+        cmd = cls._cmd_set_compare(rname1=snake(rname1), rname2=snake(rname2), op=op)
         result = bool(int(Database.execute(db=db, cmd=cmd)))
         return result
 
@@ -275,7 +275,7 @@ class Relation:
         """
         attr_list = "{"
         for k, v in attrs.items():
-            attr_list += f"{k} {v} "
+            attr_list += f"{k} {snake(v)} "
         return attr_list[:-1] + "}"
 
     @classmethod
