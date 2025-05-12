@@ -12,7 +12,7 @@ from pyral.relation import Relation
 from pyral.rtypes import Attribute
 
 Aircraft_i = namedtuple('Aircraft_i', 'ID Altitude Heading')
-Pilot_i = namedtuple('Pilot_i', 'Callsign Tailnumber Age')
+Pilot_i = namedtuple('Pilot_i', 'Callsign Tail_number Age')
 
 
 acdb = "ac"  # Flow database example
@@ -26,15 +26,15 @@ def play():
         Aircraft_i(ID='N5130B', Altitude=8159, Heading=90),
     ])
 
-    Relvar.create_relvar(db=acdb, name='Pilot', attrs=[Attribute('Callsign', 'string'), Attribute('Tailnumber', 'string'),
+    Relvar.create_relvar(db=acdb, name='Pilot', attrs=[Attribute('Callsign', 'string'), Attribute('Tail_number', 'string'),
                                                     Attribute('Age', 'int')], ids={1: ['Callsign']})
     Relvar.insert(db=acdb, relvar='Pilot', tuples=[
-        Pilot_i(Callsign='Viper', Tailnumber='N1397Q', Age=22),
-        Pilot_i(Callsign='Joker', Tailnumber='N5130B', Age=31),
+        Pilot_i(Callsign='Viper', Tail_number='N1397Q', Age=22),
+        Pilot_i(Callsign='Joker', Tail_number='N5130B', Age=31),
     ])
 
-    result = Relation.join(db=acdb, rname1="Pilot", rname2="Aircraft", attrs={"Tailnumber": "ID"}, svar_name="join")
-    result = Relation.semijoin(db=acdb, rname1="Pilot", rname2="Aircraft", attrs={"Tailnumber": "ID"}, svar_name="semijoin")
+    result = Relation.join(db=acdb, rname1="Pilot", rname2="Aircraft", attrs={"Tail number": "ID"}, svar_name="join")
+    result = Relation.semijoin(db=acdb, rname1="Pilot", rname2="Aircraft", attrs={"Tail_number": "ID"}, svar_name="semijoin")
 
     Relation.print(db=acdb, variable_name="Pilot")
     Relation.print(db=acdb, variable_name="Aircraft")
