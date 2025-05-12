@@ -441,8 +441,8 @@ class Relation:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Subtraction relation as a TclRAL string
         """
-        cmd = f'relation is ${{{rname1}}} {op} ${rname2}'
-        result = bool(int(Database.execute(db, cmd)))
+        cmd = f'relation is ${{{snake(rname1)}}} {op} ${snake(rname2)}'
+        result = bool(int(Database.execute(db=db, cmd=cmd)))
         return result
 
 
@@ -455,7 +455,7 @@ class Relation:
         :param rname: The tuples in the body of this relation are counted
         :return:
         """
-        cmd = f'relation cardinality ${{{rname}}}'
+        cmd = f'relation cardinality ${{{snake(rname)}}}'
         result = int(Database.execute(db=db, cmd=cmd))
         return result
 
@@ -633,7 +633,8 @@ class Relation:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a PyRAL relation value
         """
-        cmd = f'set {_relation} [{cls._cmd_union(relations=relations)}]'
+        relations_s = (snake(t) for t in relations)
+        cmd = f'set {_relation} [{cls._cmd_union(relations=relations_s)}]'
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)
@@ -693,9 +694,8 @@ class Relation:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a PyRAL relation value
         """
-        # projection = ' '.join(attributes)
-        cmd = f"set {_relation} [{cls._cmd_project(relation=relation, attributes=attributes)}]"
-        # cmd = f'set {_relation} [relation project ${{{relation}}} {projection.strip()}]'
+        attributes_s = (snake(s) for s in attributes)
+        cmd = f"set {_relation} [{cls._cmd_project(relation=snake(relation), attributes=attributes_s)}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)
@@ -812,9 +812,10 @@ class Relation:
         :param svar_name: An optional session variable that holds the result
         :return: The TclRAL string result representing the restricted tuple set
         """
+        relation_s = snake(relation)
         if not restriction:
             # Returns the entire relation
-            cmd = f"set {_relation} [set {relation}]"
+            cmd = f"set {_relation} [set {relation_s}]"
         else:
             setr = re.sub(r"([\w_]*):<({[\w ',]*})>", cls.set_comparison, restriction)
             # Replace square brackets and logic ops with tcl equivalents
@@ -824,7 +825,7 @@ class Relation:
             rexpr = '{' + re.sub(r'([\w_]*):({[\w ]*})', r'[string match \2 [tuple extract $t \1]]', restrict_tcl) + '}'
 
             # Insert it in the tlcral relation restrict command and execute
-            cmd = f"set {_relation} [relation restrict ${{{relation}}} t {rexpr}]"
+            cmd = f"set {_relation} [relation restrict ${{{relation_s}}} t {rexpr}]"
         result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db, svar_name)

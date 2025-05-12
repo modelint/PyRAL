@@ -33,6 +33,7 @@ def play():
         Pilot_i(Callsign='Joker', Tail_number='N5130B', Age=31),
     ])
 
+
     result = Relation.join(db=acdb, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail number": "ID"}, svar_name="join")
     result = Relation.semijoin(db=acdb, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail_number": "ID"}, svar_name="semijoin")
 

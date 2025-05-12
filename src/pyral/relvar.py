@@ -398,7 +398,7 @@ class Relvar:
         id_str = ""
         for id_attr, id_val in tid.items():
             id_str += f"{id_attr} {{{id_val}}} "
-        cmd = f'set {_relation} [relvar restrictone {relvar_name} {id_str}]'
+        cmd = f'set {_relation} [relvar restrictone {snake(relvar_name)} {id_str}]'
         result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             Relation.set_var(db, svar_name)
