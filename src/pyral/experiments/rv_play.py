@@ -1,5 +1,5 @@
 """
-join_play.py -- Play around with join
+rv_play.py -- Test relational variable management
 
 """
 # System
@@ -33,12 +33,16 @@ def play():
         Pilot_i(Callsign='Joker', Tail_number='N5130B', Age=31),
     ])
 
+    join_example = Relation.declare_rv(db=acdb, owner="P1", name="join")
+    semi_join_example = Relation.declare_rv(db=acdb, owner="P1", name="semijoin")
 
-    result = Relation.join(db=acdb, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail number": "ID"}, svar_name="join")
-    result = Relation.semijoin(db=acdb, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail_number": "ID"}, svar_name="semijoin")
+    result1 = Relation.join(db=acdb, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail number": "ID"}, svar_name=join_example)
+    result2 = Relation.semijoin(db=acdb, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail_number": "ID"}, svar_name=semi_join_example)
 
     Relation.print(db=acdb, variable_name="Pilot")
     Relation.print(db=acdb, variable_name="Fixed Wing Aircraft")
-    Relation.print(db=acdb, variable_name="join")
-    Relation.print(db=acdb, variable_name="semijoin")
+    Relation.print(db=acdb, variable_name=join_example)
+    Relation.print(db=acdb, variable_name=semi_join_example)
+
+    Relation.free_rvs(db=acdb, owner="P1")
     pass

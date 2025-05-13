@@ -28,8 +28,6 @@ session_variable_names = set()  # Maintain a list of temporary variable names in
 class Relation:
     """
     A relational value
-    def sumby(cls, db: str, per_attrs: Tuple[str], ext_attr: Attribute, sum_expr: str, relation: str = _relation,
-              svar_name: Optional[str] = None) -> RelationValue:
     """
 
     @classmethod
@@ -42,13 +40,17 @@ class Relation:
         :param name:
         :return:
         """
-        if owner not in Database[db].rv_names:
-            Database.rv_names[db]["owner"] = set()
+        # Verify that db session exists
+        if db not in Database.sessions:
+            raise KeyError(f"Database session '{db}' has not been initialized.")
 
-        if name in Database.rv_names[db]["owner"]:
+        db_rvs = Database.rv_names.setdefault(db,{})
+        owner_rvs = db_rvs.setdefault(owner, set())
+
+        if name in owner_rvs:
             raise KeyError(f"Relational variable {name} already defined for owner {owner}")
 
-        Database.rv_names[db][owner].add(name)
+        owner_rvs.add(name)
         return f"{owner}__{name}"
 
     @classmethod
@@ -59,10 +61,13 @@ class Relation:
         :param db:
         :param owner: Name of the owner who declared the relational variable names
         """
-        for name in Database.rv_names[db][owner]:
+        for name in Database.rv_names.get(db, {}).get(owner, set()):
             cmd = f"unset {owner}__{name}"
             result = Database.execute(db=db, cmd=cmd)
-        del Database.rv_names[db][owner]
+
+        Database.rv_names[db].pop(owner, None)
+        if not Database.rv_names[db]:
+            Database.rv_names.pop(db, None)
 
 
     @classmethod
