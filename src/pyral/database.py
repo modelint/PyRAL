@@ -31,6 +31,10 @@ class Database:
     # Path to the TclRAL library
     ral_lib_path = Path(__file__).parent / "tcl_scripts" / "init_TclRAL.tcl"
     sessions = {}  # A dictionary of open TclRAL sessions keyed by session name
+    # Temporary relational variable names keyed by session name
+    # Key is the name of the owner and value is the variable name
+    rv_names : dict[str, dict[str, set[str]]] = {}
+
 
     @classmethod
     def open_session(cls, name: str) -> Tk:

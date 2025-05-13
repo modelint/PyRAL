@@ -33,6 +33,39 @@ class Relation:
     """
 
     @classmethod
+    def declare_rv(cls, db: str, owner: str, name: str) -> str:
+        """
+        Saves
+
+        :param db:
+        :param owner:
+        :param name:
+        :return:
+        """
+        if owner not in Database[db].rv_names:
+            Database.rv_names[db]["owner"] = set()
+
+        if name in Database.rv_names[db]["owner"]:
+            raise KeyError(f"Relational variable {name} already defined for owner {owner}")
+
+        Database.rv_names[db][owner].add(name)
+        return f"{owner}__{name}"
+
+    @classmethod
+    def free_rvs(cls, db: str, owner: str):
+        """
+        Unset all relation variable names declared by the owner
+
+        :param db:
+        :param owner: Name of the owner who declared the relational variable names
+        """
+        for name in Database.rv_names[db][owner]:
+            cmd = f"unset {owner}__{name}"
+            result = Database.execute(db=db, cmd=cmd)
+        del Database.rv_names[db][owner]
+
+
+    @classmethod
     def summarize(cls, db: str, per_attrs: Tuple[str, ...], summaries: Tuple[SumExpr], relation: str = _relation,
               svar_name: Optional[str] = None) -> RelationValue:
         """
