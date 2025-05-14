@@ -17,6 +17,8 @@ Pilot_i = namedtuple('Pilot_i', 'Callsign Tail_number Age')
 
 acdb = "ac"  # Flow database example
 def play():
+    Database.open_session("dog")
+    Database.close_session("dog")
     Database.open_session(acdb)
     Relvar.create_relvar(db=acdb, name='Fixed Wing Aircraft', attrs=[Attribute('ID', 'string'), Attribute('Altitude', 'int'),
                                                        Attribute('Compass heading', 'int')], ids={1: ['ID']})
@@ -44,5 +46,8 @@ def play():
     Relation.print(db=acdb, variable_name=join_example)
     Relation.print(db=acdb, variable_name=semi_join_example)
 
+    Relation.free_rvs(db=acdb, owner="P2")
     Relation.free_rvs(db=acdb, owner="P1")
+    Database.close_session(acdb)
+
     pass

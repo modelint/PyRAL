@@ -15,6 +15,8 @@ Pilot_i = namedtuple('Pilot_i', 'Callsign Tail_number Age')
 def tear_down():
     yield
     Database.close_session("ac")
+
+
 #
 # @pytest.fixture(scope='function', autouse=True)
 # def tear_down_function():
@@ -42,30 +44,34 @@ def aircraft_db():
     ])
     return acdb
 
-def test_rv_release(aircraft_db):
-    join_example = Relation.declare_rv(db=aircraft_db, owner="P1", name="join")
+def test_rv_declare1(aircraft_db):
+    join_example = Relation.declare_rv(db=aircraft_db, owner="P1", name="xjoin")
     Relation.join(db=aircraft_db, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail number": "ID"},
                   svar_name=join_example)
-    assert Database.rv_names == {'ac': {'P1': {'join'}}}
+    assert Database.rv_names == {'ac': {'P1': {'xjoin'}}}
     Relation.free_rvs(db=aircraft_db, owner="P1")
-    assert Database.rv_names == {}
+    assert Database.rv_names == {aircraft_db: {}}
 
-def test_rv_release2(aircraft_db):
-    join_example = Relation.declare_rv(db=aircraft_db, owner="P1", name="join")
+def test_rv_declare2(aircraft_db):
+    join_example = Relation.declare_rv(db=aircraft_db, owner="P1", name="xjoin")
     Relation.join(db=aircraft_db, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail number": "ID"},
                   svar_name=join_example)
-    semijoin_example = Relation.declare_rv(db=aircraft_db, owner="P1", name="semijoin")
+    semijoin_example = Relation.declare_rv(db=aircraft_db, owner="P1", name="xsemijoin")
     Relation.semijoin(db=aircraft_db, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail_number": "ID"},
                       svar_name=semijoin_example)
-    assert Database.rv_names == {'ac': {'P1': {'join', 'semijoin'}}}
+    assert Database.rv_names == {'ac': {'P1': {'xjoin', 'xsemijoin'}}}
     Relation.free_rvs(db=aircraft_db, owner="P1")
-    assert Database.rv_names == {}
+    assert Database.rv_names == {aircraft_db: {}}
+
+def test_rv_free_bad_owner(aircraft_db):
+    with pytest.raises(KeyError):
+        Relation.free_rvs(db=aircraft_db, owner="P2")
 
 def test_rv_bad_session(aircraft_db):
     with pytest.raises(KeyError):
-        join_example = Relation.declare_rv(db="oink", owner="P1", name="join")
+        Relation.declare_rv(db="oink", owner="P1", name="xjoin")
 
 def test_rv_duplicate_name(aircraft_db):
-    join_example = Relation.declare_rv(db=aircraft_db, owner="P1", name="join")
+    Relation.declare_rv(db=aircraft_db, owner="P1", name="xjoin")
     with pytest.raises(KeyError):
-        join_example2 = Relation.declare_rv(db=aircraft_db, owner="P1", name="join")
+        Relation.declare_rv(db=aircraft_db, owner="P1", name="xjoin")

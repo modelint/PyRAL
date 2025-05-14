@@ -83,6 +83,8 @@ class Database:
             raise PyRALException
 
         del cls.sessions[name]
+        # TODO: name won't be there if the variables were freed
+        del cls.rv_names[name]
         _logger.info(f"PyRAL session [{name}] closed")
 
     @classmethod

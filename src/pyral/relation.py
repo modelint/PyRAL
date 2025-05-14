@@ -61,18 +61,16 @@ class Relation:
         :param db:
         :param owner: Name of the owner who declared the relational variable names
         """
-        for name in Database.rv_names.get(db, {}).get(owner, set()):
+        for name in Database.rv_names.get(db, {})[owner]:
             cmd = f"unset {owner}__{name}"
-            result = Database.execute(db=db, cmd=cmd)
+            Database.execute(db=db, cmd=cmd)
 
         Database.rv_names[db].pop(owner, None)
-        if not Database.rv_names[db]:
-            Database.rv_names.pop(db, None)
 
 
     @classmethod
     def summarize(cls, db: str, per_attrs: Tuple[str, ...], summaries: Tuple[SumExpr], relation: str = _relation,
-              svar_name: Optional[str] = None) -> RelationValue:
+                  svar_name: Optional[str] = None) -> RelationValue:
         """
         Full implementation of summarize/summarizeby
 
