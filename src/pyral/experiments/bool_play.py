@@ -20,9 +20,14 @@ def play():
     Relation.create(db=ev, attrs=[Attribute(name="ID", type="string"), Attribute(name="In_service", type="boolean")],
                     tuples=[
                         Shaft_i(ID='S1', In_service=True),
-                        Shaft_i(ID='S2', In_service=True),
+                        Shaft_i(ID='S2', In_service=False),
+                        Shaft_i(ID='S3', In_service=True),
                     ], svar_name="shafts_rv")
-    Relation.raw(db=ev, cmd_str="relation body $shafts_rv")
+    # Relation.raw(db=ev, cmd_str="relation body $shafts_rv")
+
+    R = f"In_service:<{True}>"
+    result = Relation.restrict(db=ev, relation="shafts_rv", restriction=R)
+
     pass
 
     # Relvar.create_relvar(db=ev, name='Shaft', attrs=[Attribute('ID', 'string'), Attribute('In_service', 'boolean'),],
