@@ -37,6 +37,32 @@ class Database:
     rv_names : dict[str, dict[str, set[str]]] = {}
 
     @classmethod
+    def get_open_sessions(cls) -> set[str]:
+        """
+        Return the tcl interpreter dictionary representing all open database sessions.
+        The purpose is mostly for diagnostics so that we can verify that there aren't any unneeded
+        db sessions still hanging around after a procedure in the client completes.
+
+        :param db: Name of the database session
+        :return: Set of open database session names
+        """
+        return {k for k in cls.sessions.keys()}
+
+    @classmethod
+    def get_rv_names(cls, db: str) -> dict[str, set[str]]:
+        """
+        Return the relational variable names dictionary for a given database session.
+        The purpose is mostly for diagnostics so that we can verify that there aren't any unneeded
+        relation variables still hanging around after a procedure in the client completes.
+
+        :param db: Name of the database session
+        :return: Dictionary mapping owner -> set of RV names
+        """
+        # We copy the value since when we do diagnostics we might want to capture a before/after pair of values
+        # and without the shallow copy(), both before and after will point to the same possibly mutated value.
+        return cls.rv_names.get(db, {}).copy()
+
+    @classmethod
     def open_session(cls, name: str) -> Tk:
         """
         Open a PyRAL session.

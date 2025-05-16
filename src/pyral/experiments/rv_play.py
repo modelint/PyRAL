@@ -43,6 +43,7 @@ acdb = "ac"  # Flow database example
 def play():
 
     Database.open_session(acdb)
+    db_open = Database.get_open_sessions()
 
 
     # Get a NamedTuple with a field for each relation variable name
@@ -74,12 +75,14 @@ def play():
     Relation.print(db=acdb, variable_name=rv.join_example)
     Relation.print(db=acdb, variable_name=rv.semijoin_example)
 
-    print(Database.rv_names)
+    before = Database.get_rv_names(db=acdb)
     print("---")
-    Relation.free_rvs(db=acdb, owner="P2")
+    Relation.free_rvs(db=acdb, owner="P1")
+    after = Database.get_rv_names(db=acdb)
 
     # Relation.free_rvs(db=acdb, owner="P1", names=("join_example",), exclude=True)
-    print(Database.rv_names)
     Database.close_session(acdb)
+    afterclose = Database.get_rv_names(db=acdb)
+    afterdb = Database.get_open_sessions()
 
     pass
