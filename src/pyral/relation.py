@@ -54,19 +54,39 @@ class Relation:
         return f"{owner}__{name}"
 
     @classmethod
-    def free_rvs(cls, db: str, owner: str):
+    def free_rvs(cls, db: str, owner: str, names: tuple[str, ...] = (), exclude: bool = False):
         """
-        Unset all relation variable names declared by the owner
+        Unset relation variable names declared by the owner.
 
-        :param db:
-        :param owner: Name of the owner who declared the relational variable names
+        :param db: Database session name
+        :param owner: Name of the owner who declared the relational variables
+        :param names: Names to include or exclude (depending on `exclude`)
+        :param exclude: If True, *keep* the listed names and delete all others.
+                        If False, *delete only* the listed names. If names is empty, delete all.
         """
-        for name in Database.rv_names.get(db, {})[owner]:
+        try:
+            owner_rvs = Database.rv_names[db][owner]
+        except KeyError:
+            raise KeyError(f"No such owner '{owner}' in session '{db}'")
+
+        names_to_remove = (
+            owner_rvs - set(names) if exclude and names
+            else set(names) if names
+            else owner_rvs
+        )
+
+        for name in names_to_remove:
             cmd = f"unset {owner}__{name}"
             Database.execute(db=db, cmd=cmd)
 
-        Database.rv_names[db].pop(owner, None)
-
+        # Remove updated set of RVs or delete owner entry entirely if now empty
+        remaining = owner_rvs - names_to_remove
+        if remaining:
+            Database.rv_names[db][owner] = remaining
+        else:
+            Database.rv_names[db].pop(owner, None)
+            if not Database.rv_names[db]:
+                Database.rv_names.pop(db, None)
 
     @classmethod
     def summarize(cls, db: str, per_attrs: Tuple[str, ...], summaries: Tuple[SumExpr], relation: str = _relation,

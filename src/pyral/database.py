@@ -72,7 +72,7 @@ class Database:
     @classmethod
     def close_session(cls, name: str):
         """
-        Closes an open TclRAL session
+        Closes an open TclRAL session and removes any administrative data for that session
 
         :param name:  Session name
         """
@@ -82,9 +82,11 @@ class Database:
             _logger.error(f"PyRAL session [{name}] is not open")
             raise PyRALException
 
-        del cls.sessions[name]
-        # TODO: name won't be there if the variables were freed
-        del cls.rv_names[name]
+        # Clear out any administrative entries related to this session
+        # from class variables
+        cls.sessions.pop(name, None)  # Open database session name and interpreter
+        cls.rv_names.pop(name, None)  # All tracked relation variable names
+
         _logger.info(f"PyRAL session [{name}] closed")
 
     @classmethod

@@ -4,7 +4,7 @@ import pytest
 from pyral.relation import Relation
 from pyral.database import Database
 from pyral.relvar import Relvar
-from pyral.rtypes import Attribute, RelationValue
+from pyral.rtypes import Attribute
 
 from collections import namedtuple
 
@@ -15,13 +15,6 @@ Pilot_i = namedtuple('Pilot_i', 'Callsign Tail_number Age')
 def tear_down():
     yield
     Database.close_session("ac")
-
-
-#
-# @pytest.fixture(scope='function', autouse=True)
-# def tear_down_function():
-#     yield
-#     Relation.free_rvs(db="ac", owner="P1")
 
 @pytest.fixture(scope='module')
 def aircraft_db():
@@ -50,7 +43,7 @@ def test_rv_declare1(aircraft_db):
                   svar_name=join_example)
     assert Database.rv_names == {'ac': {'P1': {'xjoin'}}}
     Relation.free_rvs(db=aircraft_db, owner="P1")
-    assert Database.rv_names == {aircraft_db: {}}
+    assert Database.rv_names == {}
 
 def test_rv_declare2(aircraft_db):
     join_example = Relation.declare_rv(db=aircraft_db, owner="P1", name="xjoin")
@@ -61,7 +54,7 @@ def test_rv_declare2(aircraft_db):
                       svar_name=semijoin_example)
     assert Database.rv_names == {'ac': {'P1': {'xjoin', 'xsemijoin'}}}
     Relation.free_rvs(db=aircraft_db, owner="P1")
-    assert Database.rv_names == {aircraft_db: {}}
+    assert Database.rv_names == {}
 
 def test_rv_free_bad_owner(aircraft_db):
     with pytest.raises(KeyError):
