@@ -17,11 +17,11 @@ ev = "ev"
 
 def play():
     Database.open_session(ev)
-    Relation.create(db=ev, attrs=[Attribute(name="ID", type="string"), Attribute(name="Speed", type="int"), Attribute(name="In_service", type="boolean")],
+    Relation.create(db=ev, attrs=[Attribute(name="ID", type="string"), Attribute(name="Speed", type="double"), Attribute(name="In_service", type="boolean")],
                     tuples=[
-                        Shaft_i(ID='S1 x', Speed=31, In_service=True),
-                        Shaft_i(ID='S2', Speed=14, In_service=False),
-                        Shaft_i(ID='S3', Speed=20, In_service=True),
+                        Shaft_i(ID='S1', Speed=31.3, In_service=True),
+                        Shaft_i(ID='S2', Speed=14.2, In_service=False),
+                        Shaft_i(ID='S3', Speed=20.16, In_service=True),
                     ], svar_name="shafts_rv")
     # Relation.raw(db=ev, cmd_str="relation restrictwith ${shafts_rv} {[expr {$Speed > 14}]}",
     #              svar_name="raw_rv")
@@ -38,10 +38,12 @@ def play():
     # R = f"ID:<{v}>, In_service:<{True}>"
     # R = f"ID:<{v}> OR In_service:<{True}>"
 
-    v = "S1 x"
-    s = 14
+    v = "S1"
+    s = 14.2
     # R = f"Speed > {s}, ID:<S3>"
-    R = f"ID:<{v}>"
+    # R = f"ID:<{v}>"
+    # R = f"ID==<S1>"
+    # R = f"ID:<{v}>, In_service:<True>"
     # R = f"ID:<{v}>, Speed:<{s}>"
     # R = f"In_service:<{True}>"
     # Not working: R = f"ID:<{v}>, Speed:{s}"
@@ -50,7 +52,7 @@ def play():
     # R = f"NOT In_service:<{True}>"
     # R = f"NOT Speed:<{s}>"
     s = 31
-    # R = f"ID:<{v}> OR (In_service:<{True}> AND Speed > {s})"
+    R = f"ID:<{v}> OR (In_service:<{True}> AND Speed > {s})"
 
 
     result = Relation.restrict(db=ev, relation="shafts_rv", restriction=R, svar_name="restriction")

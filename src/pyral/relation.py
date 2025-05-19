@@ -844,6 +844,74 @@ class Relation:
     @classmethod
     def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,
                   svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Here we select zero or more tuples that match the supplied criteria.
+
+        In relational theory this is known as a restriction operation.
+
+        TclRAL syntax:
+            relation restrictwith <relationValue> <expression>
+
+        The most common usage scenario is to select on a single identifier attribute value.
+
+            R = f"ID:S1"
+            result = Relation.restrict(db=ev, relation="shafts_rv", restriction=R, svar_name="restriction")
+
+            -- restriction --
+            +------+---------+--------------+
+            | ID   |   Speed | In_service   |
+            +======+=========+==============+
+            | S1   |      31 | True         |
+            +------+---------+--------------+
+
+            This yields the TclRAL statement
+
+            relation restrictwith ${shafts_rv} {[string match {S1} $ID]}
+
+            So we have the command, a relation variable, and the string match.
+            The string match arguments are the value to match and the name of the attribute as a tcl variable
+
+        If there is any whitespace in the value, use <> brackets to enclose it. For example:
+
+            R = f"Level_name:<3rd Floor>"
+
+        Note that the attribute names must be specified in snake case. Relation names can have spaces, but are
+        automatically converted to snake case in the generated TclRAL. It's a bit trickier to do this with all the
+        attribute names since they are embedded in the restriction expression, so we put that burden on
+        the user.
+
+        Note that the : symbol is shorthand for matching and only works with strings. The == operator can
+        only be used to match numeric values.
+
+        You can match multiple values using the ', ' to AND them together. Here is the supplied PyRAL expression
+        and generated TclRAL expression:
+
+            PyRAL: R = f"ID:<{i}>, In_service:<{True}>"
+            TclRAL: {[string match {S1} $ID] && [string match {True} $In_service]}
+
+        Here we use i to specify the "S1" ID value using the python formatted string {} brackets.
+        The brackets around True are necessary to ensure a boolean value is inserted and not the "True" string.
+        (though the string value would work as well since Tcl represents a boolean value as a truthy string)
+
+        Numeric comparisons can be supplied using the usual operators with s set to the integer 14:
+
+            PyRAL: R = f"Speed > {s}"
+            TclRAL: {[expr {$Speed > 14}]}
+
+        In a numeric comparison you do not need to surround the numeric value with <> brackets.
+
+        Finally, you can express more complex logic using nested parentheses and the logic operators
+        AND, OR, NOT as follows:
+
+            PyRAL: R = f"ID:<{v}> OR (In_service:<{True}> AND Speed > {s})"
+            TclRAL: {[string match {S1} $ID] || ([string match {True} $In_service] && [expr {$Speed > 31}])}
+
+        :param db: DB session name
+        :param relation: Name of a relation variable where the operation is applied
+        :param restriction: A string in Scrall notation that specifies the restriction criteria
+        :param svar_name: An optional session variable that holds the result
+        :return: The TclRAL string result representing the restricted tuple set
+        """
         relation_s = snake(relation)
         if not restriction:
             cmd = f"set {_relation} [set {relation_s}]"

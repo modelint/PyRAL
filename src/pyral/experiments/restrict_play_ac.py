@@ -52,7 +52,8 @@ def play():
 
     # R = f"Altitude > 10000"
     # R = f"Compass_heading:320"
-    R = f"Altitude > 10000, Compass_heading:320"
+    # R = f"Altitude > 10000, Compass_heading:320"
+    R = f"Compass_heading > 90, Compass_heading < 320"
     result = Relation.restrict(db=acdb, relation="Fixed Wing Aircraft", restriction=R, svar_name="restriction")
     Relation.print(db=acdb, variable_name="restriction")
 
