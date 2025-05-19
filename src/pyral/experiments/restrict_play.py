@@ -11,17 +11,17 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.rtypes import Attribute
 
-Shaft_i = namedtuple('Shaft_i', 'ID Speed In_service')
+Shaft_i = namedtuple('Shaft_i', 'Class Speed In_service')
 
 ev = "ev"
 
 def play():
     Database.open_session(ev)
-    Relation.create(db=ev, attrs=[Attribute(name="ID", type="string"), Attribute(name="Speed", type="double"), Attribute(name="In_service", type="boolean")],
+    Relation.create(db=ev, attrs=[Attribute(name="Class", type="string"), Attribute(name="Speed", type="double"), Attribute(name="In_service", type="boolean")],
                     tuples=[
-                        Shaft_i(ID='S1', Speed=31.3, In_service=True),
-                        Shaft_i(ID='S2', Speed=14.2, In_service=False),
-                        Shaft_i(ID='S3', Speed=20.16, In_service=True),
+                        Shaft_i(Class='S1', Speed=31.3, In_service=True),
+                        Shaft_i(Class='S2', Speed=14.2, In_service=False),
+                        Shaft_i(Class='S3', Speed=20.16, In_service=True),
                     ], svar_name="shafts_rv")
     # Relation.raw(db=ev, cmd_str="relation restrictwith ${shafts_rv} {[expr {$Speed > 14}]}",
     #              svar_name="raw_rv")
@@ -41,7 +41,7 @@ def play():
     v = "S1"
     s = 14.2
     # R = f"Speed > {s}, ID:<S3>"
-    # R = f"ID:<{v}>"
+    R = f"Class:<{v}>"
     # R = f"ID==<S1>"
     # R = f"ID:<{v}>, In_service:<True>"
     # R = f"ID:<{v}>, Speed:<{s}>"
@@ -52,9 +52,10 @@ def play():
     # R = f"NOT In_service:<{True}>"
     # R = f"NOT Speed:<{s}>"
     s = 31
-    R = f"ID:<{v}> OR (In_service:<{True}> AND Speed > {s})"
+    # R = f"ID:<{v}> OR (In_service:<{True}> AND Speed > {s})"
 
 
+    # result = Relation.restrict(db=ev, relation="shafts_rv", svar_name="restriction")
     result = Relation.restrict(db=ev, relation="shafts_rv", restriction=R, svar_name="restriction")
     Relation.print(db=ev, variable_name="restriction")
 

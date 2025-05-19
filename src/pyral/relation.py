@@ -926,14 +926,14 @@ class Relation:
             # Handle attr:<value> form for string match
             restrict_tcl = re.sub(
                 pattern=r'([\w_]+):<([^>]*)>',
-                repl=r'[string match {\2} $\1]',
+                repl=r'[string match {\2} [tuple extract $t \1]]',
                 string=restrict_tcl
             )
 
             # Handle attr:value form for string match (NEW addition)
             restrict_tcl = re.sub(
                 pattern=r'([\w_]+):([^\s<>()&|!]+)',
-                repl=r'[string match {\2} $\1]',
+                repl=r'[string match {\2} [tuple extract $t \1]]',
                 string=restrict_tcl
             )
 
@@ -944,7 +944,7 @@ class Relation:
                 .replace('NOT ', '!')
 
             rexpr = f"{{{restrict_tcl}}}"
-            cmd = f"set {_relation} [relation restrictwith ${{{relation_s}}} {rexpr}]"
+            cmd = f"set {_relation} [relation restrict ${{{relation_s}}} t {rexpr}]"
 
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:
