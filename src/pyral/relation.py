@@ -919,7 +919,7 @@ class Relation:
             # Handle arithmetic comparisons like Speed > 14
             restrict_tcl = re.sub(
                 pattern=r'(\w+)\s*(==|!=|>=|<=|<|>)\s*(-?\d+(?:\.\d+)?)',
-                repl=r'[expr {$\1 \2 \3}]',
+                repl=r'[expr [tuple extract $t \1] \2 \3]',
                 string=restriction
             )
 

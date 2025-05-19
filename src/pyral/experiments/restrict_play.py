@@ -41,17 +41,17 @@ def play():
     v = "S1"
     s = 14.2
     # R = f"Speed > {s}, ID:<S3>"
-    R = f"Class:<{v}>"
+    # R = f"Class:{v}"
     # R = f"ID==<S1>"
     # R = f"ID:<{v}>, In_service:<True>"
     # R = f"ID:<{v}>, Speed:<{s}>"
     # R = f"In_service:<{True}>"
     # Not working: R = f"ID:<{v}>, Speed:{s}"
     # R = f"Speed:{s}"
-    # R = f"Speed > {s}"
+    R = f"Speed > {s}"
     # R = f"NOT In_service:<{True}>"
     # R = f"NOT Speed:<{s}>"
-    s = 31
+    # s = 31
     # R = f"ID:<{v}> OR (In_service:<{True}> AND Speed > {s})"
 
 
