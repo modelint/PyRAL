@@ -841,6 +841,40 @@ class Relation:
             cls.set_var(db=db, name=svar_name)
         return cls.make_pyrel(result)
 
+    @classmethod
+    def restrict2(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,
+                  svar_name: Optional[str] = None) -> RelationValue:
+        relation_s = snake(relation)
+        if not restriction:
+            cmd = f"set {_relation} [set {relation_s}]"
+        else:
+            # FIRST: handle arithmetic comparisons like Speed > 14
+            restrict_tcl = re.sub(
+                r'(\w+)\s*(==|!=|>=|<=|<|>)\s*(-?\d+(?:\.\d+)?)',
+                r'[expr {$\1 \2 \3}]',
+                restriction
+            )
+
+            # THEN: handle string matches like ID:<S3>
+            restrict_tcl = re.sub(
+                r'([\w_]+):<([^>]*)>',
+                r'[string match {\2} $\1]',
+                restrict_tcl
+            )
+
+            # Replace logic operators (AND/OR/NOT) and comma
+            restrict_tcl = restrict_tcl.replace(' OR ', ' || ') \
+                .replace(', ', ' && ') \
+                .replace(' AND ', ' && ') \
+                .replace('NOT ', '!')
+
+            rexpr = f"{{{restrict_tcl}}}"
+            cmd = f"set {_relation} [relation restrictwith ${{{relation_s}}} {rexpr}]"
+
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
 
     @classmethod
     def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,
@@ -873,18 +907,18 @@ class Relation:
             # Returns the entire relation
             cmd = f"set {_relation} [set {relation_s}]"
         else:
-            setr = re.sub(r"([\w_]*):<({[\w ',]*})>", cls.set_comparison, restriction)
+            setr = re.sub(pattern=r"([\w_]*):<({[\w ',]*})>", repl=cls.set_comparison, string=restriction)
             # Replace square brackets and logic ops with tcl equivalents
             restrict_tcl = setr.replace('<', '{').replace('>', '}'). \
                 replace(' OR ', ' || ').replace(', ', ' && ').replace(' AND ', ' && ').replace('NOT ', '!')
             # Now process ':' attr:value match pairs with tcl string match expressions and wrap with tcl braces
-            rexpr = '{' + re.sub(r'([\w_]*):({[\w ]*})', r'[string match \2 [tuple extract $t \1]]', restrict_tcl) + '}'
+            rexpr = '{' + re.sub(pattern=r'([\w_]*):({[\w ]*})', repl=r'[string match \2 [tuple extract $t \1]]', string=restrict_tcl) + '}'
 
             # Insert it in the tlcral relation restrict command and execute
             cmd = f"set {_relation} [relation restrict ${{{relation_s}}} t {rexpr}]"
-        result = Database.execute(db, cmd)
+        result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
-            cls.set_var(db, svar_name)
+            cls.set_var(db=db, name=svar_name)
         return cls.make_pyrel(result)
 
     @classmethod
