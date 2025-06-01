@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 
 # PyRAL
-from pyral.rtypes import RelationValue, Attribute, header, body, SetOp, SumExpr, snake
+from pyral.rtypes import RelationValue, Attribute, header, body, SetOp, SumExpr, snake, Order
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -840,6 +840,48 @@ class Relation:
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)
         return cls.make_pyrel(result)
+
+    @classmethod
+    def rank(cls, db: str, order: Order, sort_attr_name: str, rank_attr_name: str = "Rank", relation: str = _relation,
+             svar_name: Optional[str] = None) -> RelationValue:
+        """
+        TclRAL documentation and syntax:
+
+            relation rank relationValue ?-ascending | -descending? rankAttr newAttr
+
+        The rank subcommand returns a new relation whose heading is the same as relationValue
+        extending by an attribute named newAttr. The type of newAttr will be int and its value
+        will be set to the number of tuples in relationValue where the value of rankAttr is
+        less than or equal to (?-descending?) or greater than or equal to (?-ascending?) that of
+        the given tuple. The default ranking is -ascending.
+
+        The type of rankAttr must be int, double, or string.
+
+        The rank command is useful when it is desirable to limit the number of tuples in the result.
+
+        PyRAL example:
+
+            result = Relation.rank(db=ev, relation="shafts_rv", sort_attr_name="Speed", order=Order.DESCENDING)
+
+        :param db: DB session name
+        :param order: ascending or descending (no default ordering)
+        :param sort_attr_name: The values of this attribute will be sorted (TclRAL rankAttr)
+        :param rank_attr_name: The name of the added rank number attribute (TclRAL newAttr)
+        :param relation: Relation to be sorted
+        :param svar_name: An optional session variable that holds the result
+        :return: Relation with added rank_attr_name
+        """
+        cmd = f"set {_relation} [relation rank ${{{relation}}} -{order.value} {{{sort_attr_name}}} {{{rank_attr_name}}}]"
+
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
+
+    # @classmethod
+    # def rank_restrict(cls, db: str, attribute: str, op: str, card: str, relation: str = _relation,
+    #              svar_name: Optional[str] = None) -> RelationValue:
+    #     pass
 
     @classmethod
     def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,

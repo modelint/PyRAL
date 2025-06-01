@@ -30,6 +30,10 @@ class SetOp(Enum):
     neq = 'notequal'
     notequal = 'notequal'
 
+class Order(Enum):
+    ASCENDING = "ascending"
+    DESCENDING = "descending"
+
 class Mult(Enum):
     AT_LEAST_ONE = '+'
     EXACTLY_ONE = '1'

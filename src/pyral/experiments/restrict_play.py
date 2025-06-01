@@ -9,7 +9,7 @@ from collections import namedtuple
 from pyral.database import Database
 from pyral.relvar import Relvar
 from pyral.relation import Relation
-from pyral.rtypes import Attribute
+from pyral.rtypes import Attribute, Order
 
 Shaft_i = namedtuple('Shaft_i', 'Class Speed In_service')
 
@@ -48,7 +48,7 @@ def play():
     # R = f"In_service:<{True}>"
     # Not working: R = f"ID:<{v}>, Speed:{s}"
     # R = f"Speed:{s}"
-    R = f"Speed > {s}"
+    R = f"Speed >= {s}"
     # R = f"NOT In_service:<{True}>"
     # R = f"NOT Speed:<{s}>"
     # s = 31
@@ -56,8 +56,11 @@ def play():
 
 
     # result = Relation.restrict(db=ev, relation="shafts_rv", svar_name="restriction")
-    result = Relation.restrict(db=ev, relation="shafts_rv", restriction=R, svar_name="restriction")
-    Relation.print(db=ev, variable_name="restriction")
+    # result = Relation.restrict(db=ev, relation="shafts_rv", restriction=R, svar_name="restriction")
+    # Relation.print(db=ev, variable_name="restriction")
+
+    result = Relation.rank(db=ev, relation="shafts_rv", sort_attr_name="Speed", order=Order.DESCENDING)
+    Relation.print(db=ev, table_name="ranked")
 
     pass
 
