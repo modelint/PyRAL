@@ -907,6 +907,23 @@ class Relation:
             order: Order = Order.ASCENDING, relation: str = _relation,
             svar_name: Optional[str] = None) -> RelationValue:
         """
+        TclRAL documentation:
+
+            relation tag relationValue attrName ?-ascending | -descending sort-attr-list? ?-within attr-list?
+
+        The tag subcommand creates a new relation which has the same heading as relationValue extended by a
+        new attribute named attrName. The type of attrName will be int and will have the values between 0 and the
+        cardinality of relationValue minus one. The tuples in relationValue will be extended in either ascending or
+        descending order of the sort-attr-list.
+
+        If no sort-attr-list argument is given, then the tagging order is arbitrary.
+
+        If the ?-within? argument is given then the values of attrName attribute will be unique within the subset
+        of tuples which match the values of attr-list. The tag command is useful when a full ordering needs to be
+        placed on a relation. For example, tagging a relation will allow projecting both the tag and another
+        attribute without losing any values.
+
+        PyRAL implements this partially for now and the -within option is not yet supported.
 
         :param sort_attrs:
         :param order:
@@ -927,14 +944,28 @@ class Relation:
     def rank_restrict(cls, db: str, attr_name: str, extent: Extent, card: Card, relation: str = _relation,
                       svar_name: Optional[str] = None) -> RelationValue:
         """
+        Our goal here is to order the tuples of a relation on some attribute and then select the
+        furthest extent, either greatest or least.
 
-        :param db:
-        :param attr_name:
-        :param extent:
-        :param card:
-        :param relation:
-        :param svar_name:
-        :return:
+        For example, we might want to select the highest flying aircraft.
+
+        We do this by ranking all aircraft tuples according to altitude in descending order.
+
+        Then we select all those of ranking 1. Since multiple aircraft might be flying at the same highest
+        altitude, there may be multiple ranked as 1. And if there are no aircraft instances, we'll find
+        no highest flying aicraft.
+
+        If the user specifies the ALL cardinality, they could obtain multiple aircraft tuples at the same
+        altitude. However, the ONE cardinality specifies that only one will be selected and the user cannot
+        choose which particular tuple is selected.
+
+        :param db: DB session name
+        :param attr_name: Tuples are ordered based on values of this attribute
+        :param extent: greatest or least
+        :param card: one or all
+        :param relation: Selection is on tuples of this relation
+        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+        :return: The tuple or tuples at the same extent
         """
         order = Order.DESCENDING if extent == Extent.GREATEST else Order.ASCENDING
         if card == Card.ALL:
