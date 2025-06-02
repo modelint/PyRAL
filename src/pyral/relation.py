@@ -23,6 +23,7 @@ _logger = logging.getLogger(__name__)
 # to be the input.
 _relation = r'^relation'  # Name of the latest relation result. Carat prevents name collision
 _RANK = "_rank"  # Default name of the rank attribute added by extension using the rank command
+_TAG = "_tag" # Default name of the tag attribute added by the tag command
 session_variable_names = set()  # Maintain a list of temporary variable names in use
 
 
@@ -894,8 +895,29 @@ class Relation:
         :param svar_name: An optional session variable that holds the result
         :return: Relation with added rank_attr_name
         """
-        cmd = f"set {_relation} [relation rank ${{{relation}}} -{order.value} {{{sort_attr_name}}} {{{rank_attr_name}}}]"
+        cmd = f"set {_relation} [relation rank ${{{relation}}} -{order.value}{{{sort_attr_name}}}{{{rank_attr_name}}}]"
 
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
+
+    @classmethod
+    def tag(cls, db: str, tag_attr_name: str = _TAG, sort_attrs: Tuple[str, ...] = None,
+            order: Order = Order.ASCENDING, relation: str = _relation,
+            svar_name: Optional[str] = None) -> RelationValue:
+        """
+
+        :param sort_attrs:
+        :param order:
+        :param db:
+        :param tag_attr_name:
+        :param relation:
+        :param svar_name:
+        :return:
+        """
+        do_sort = "" if not sort_attrs else f" -{order.value} {' '.join(sort_attrs)} "
+        cmd = f"set {_relation} [relation tag ${{{relation}}} {{{tag_attr_name}}} {do_sort}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:
             cls.set_var(db=db, name=svar_name)
@@ -915,10 +937,16 @@ class Relation:
         :return:
         """
         order = Order.DESCENDING if extent == Extent.GREATEST else Order.ASCENDING
-        Relation.rank(db=db, order=order, sort_attr_name=attr_name, relation=relation)
-        R = f"{_RANK}:1"
-        Relation.restrict(db=db, restriction=R)
-        return Relation.project(db=db, attributes=(_RANK,), exclude=True)
+        if card == Card.ALL:
+            Relation.rank(db=db, order=order, sort_attr_name=attr_name, relation=relation)
+            R = f"{_RANK}:1"
+            Relation.restrict(db=db, restriction=R)
+            return Relation.project(db=db, attributes=(_RANK,), exclude=True)
+        else:  # Card must be ONE
+            Relation.tag(db=db, order=order, sort_attrs=(attr_name,), relation=relation)
+            R = f"{_TAG}:0"
+            Relation.restrict(db=db, restriction=R)
+            return Relation.project(db=db, attributes=(_TAG,), exclude=True)
 
     @classmethod
     def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,

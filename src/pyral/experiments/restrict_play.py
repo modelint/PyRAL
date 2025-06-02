@@ -22,6 +22,7 @@ def play():
                         Shaft_i(Class='S1', Speed=31.3, In_service=True),
                         Shaft_i(Class='S2', Speed=14.2, In_service=False),
                         Shaft_i(Class='S3', Speed=20.16, In_service=True),
+                        Shaft_i(Class='S4', Speed=31.3, In_service=True),
                     ], svar_name="shafts_rv")
     # Relation.raw(db=ev, cmd_str="relation restrictwith ${shafts_rv} {[expr {$Speed > 14}]}",
     #              svar_name="raw_rv")
@@ -60,7 +61,7 @@ def play():
     # Relation.print(db=ev, variable_name="restriction")
 
     # result = Relation.rank(db=ev, relation="shafts_rv", sort_attr_name="Speed", order=Order.DESCENDING)
-    result = Relation.rank_restrict(db=ev, relation="shafts_rv", attr_name="Speed", extent=Extent.GREATEST, card=Card.ALL)
+    result = Relation.rank_restrict(db=ev, relation="shafts_rv", attr_name="Speed", extent=Extent.GREATEST, card=Card.ONE)
     Relation.print(db=ev, table_name="ranked")
 
     pass
