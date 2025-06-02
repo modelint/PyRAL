@@ -32,12 +32,12 @@ class SetOp(Enum):
 
 
 class Extent(Enum):
-    GREATEST = 1
-    LEAST = 2
+    GREATEST = "greatest"
+    LEAST = "least"
 
 class Card(Enum):
-    ONE = 1
-    ALL = 2
+    ONE = "one"
+    ALL = "all"
 
 class Order(Enum):
     ASCENDING = "ascending"

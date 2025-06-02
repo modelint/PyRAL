@@ -972,12 +972,12 @@ class Relation:
             Relation.rank(db=db, order=order, sort_attr_name=attr_name, relation=relation)
             R = f"{_RANK}:1"
             Relation.restrict(db=db, restriction=R)
-            return Relation.project(db=db, attributes=(_RANK,), exclude=True)
+            return Relation.project(db=db, attributes=(_RANK,), exclude=True, svar_name=svar_name)
         else:  # Card must be ONE
             Relation.tag(db=db, order=order, sort_attrs=(attr_name,), relation=relation)
             R = f"{_TAG}:0"
             Relation.restrict(db=db, restriction=R)
-            return Relation.project(db=db, attributes=(_TAG,), exclude=True)
+            return Relation.project(db=db, attributes=(_TAG,), exclude=True, svar_name=svar_name)
 
     @classmethod
     def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,

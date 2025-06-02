@@ -61,8 +61,9 @@ def play():
     # Relation.print(db=ev, variable_name="restriction")
 
     # result = Relation.rank(db=ev, relation="shafts_rv", sort_attr_name="Speed", order=Order.DESCENDING)
-    result = Relation.rank_restrict(db=ev, relation="shafts_rv", attr_name="Speed", extent=Extent.GREATEST, card=Card.ONE)
-    Relation.print(db=ev, table_name="ranked")
+    result = Relation.rank_restrict(db=ev, relation="shafts_rv", attr_name="Speed", extent=Extent.GREATEST,
+                                    card=Card.ONE, svar_name="rr_result")
+    Relation.print(db=ev, variable_name="rr_result")
 
     pass
 
