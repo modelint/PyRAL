@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 
 # PyRAL
-from pyral.rtypes import RelationValue, Attribute, header, body, SetOp, SumExpr, snake, Order
+from pyral.rtypes import RelationValue, Attribute, header, body, SetOp, SumExpr, snake, Order, Card, Extent
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ _logger = logging.getLogger(__name__)
 # For any given command, if no relvar is specified, the previous relation result is assumed
 # to be the input.
 _relation = r'^relation'  # Name of the latest relation result. Carat prevents name collision
+_RANK = "_rank"  # Default name of the rank attribute added by extension using the rank command
 session_variable_names = set()  # Maintain a list of temporary variable names in use
 
 
@@ -737,7 +738,13 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def project(cls, db: str, attributes: Tuple[str, ...], relation: str = _relation,
+    def heading(cls, db:str, relation: str = _relation):
+        cmd = f"relation heading ${{{relation}}}"
+        result = Database.execute(db=db, cmd=cmd)
+        return result
+
+    @classmethod
+    def project(cls, db: str, attributes: Tuple[str, ...], exclude: bool = False, relation: str = _relation,
                 svar_name: Optional[str] = None) -> RelationValue:
         """
         Returns a relation whose heading consists of only a set of selected attributes.
@@ -747,10 +754,26 @@ class Relation:
         :param db: DB session name
         :param attributes: Attributes to be projected
         :param relation: The relation to be projected
+        :param exclude: If true, all attributes will be returned except for those in the attributes tuple
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a PyRAL relation value
         """
-        attributes_s = (snake(s) for s in attributes)
+        # Create a list of attributes to project by inclusion or exclusion
+        if exclude:
+            # Use heading method to get all attributes defined on the relation
+            # and then project on all of these except those attributes provided in the tuple
+            attr_types = Relation.heading(db=db, relation=relation)
+            # heading returns a string delimited by spaces with attribute type pairs
+            tokens = attr_types.split()
+            # Now skip over all the type names and just grab the attribute names (1st, 3rd, ...)
+            pairs = zip(tokens[::2], tokens[1::2])
+            # Exclude the provided attribute names
+            project_attrs = [name for name, _ in pairs if name not in attributes]
+        else:
+            # Just use the provided attributes
+            project_attrs = list(attributes)
+
+        attributes_s = (snake(s) for s in project_attrs)
         cmd = f"set {_relation} [{cls._cmd_project(relation=snake(relation), attributes=attributes_s)}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
@@ -842,7 +865,7 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def rank(cls, db: str, order: Order, sort_attr_name: str, rank_attr_name: str = "Rank", relation: str = _relation,
+    def rank(cls, db: str, order: Order, sort_attr_name: str, rank_attr_name: str = _RANK, relation: str = _relation,
              svar_name: Optional[str] = None) -> RelationValue:
         """
         TclRAL documentation and syntax:
@@ -878,10 +901,24 @@ class Relation:
             cls.set_var(db=db, name=svar_name)
         return cls.make_pyrel(result)
 
-    # @classmethod
-    # def rank_restrict(cls, db: str, attribute: str, op: str, card: str, relation: str = _relation,
-    #              svar_name: Optional[str] = None) -> RelationValue:
-    #     pass
+    @classmethod
+    def rank_restrict(cls, db: str, attr_name: str, extent: Extent, card: Card, relation: str = _relation,
+                      svar_name: Optional[str] = None) -> RelationValue:
+        """
+
+        :param db:
+        :param attr_name:
+        :param extent:
+        :param card:
+        :param relation:
+        :param svar_name:
+        :return:
+        """
+        order = Order.DESCENDING if extent == Extent.GREATEST else Order.ASCENDING
+        Relation.rank(db=db, order=order, sort_attr_name=attr_name, relation=relation)
+        R = f"{_RANK}:1"
+        Relation.restrict(db=db, restriction=R)
+        return Relation.project(db=db, attributes=(_RANK,), exclude=True)
 
     @classmethod
     def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,

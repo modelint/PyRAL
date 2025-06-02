@@ -30,6 +30,15 @@ class SetOp(Enum):
     neq = 'notequal'
     notequal = 'notequal'
 
+
+class Extent(Enum):
+    GREATEST = 1
+    LEAST = 2
+
+class Card(Enum):
+    ONE = 1
+    ALL = 2
+
 class Order(Enum):
     ASCENDING = "ascending"
     DESCENDING = "descending"
@@ -39,6 +48,8 @@ class Mult(Enum):
     EXACTLY_ONE = '1'
     ZERO_ONE_OR_MANY = '*'
     ZERO_OR_ONE = '?'
+
+
 
 def snake(name: str) -> str:
     return name.replace(' ', '_')
