@@ -6,7 +6,6 @@ import logging.config
 from tkinter import Tcl, Tk, TclError
 from pyral.exceptions import PyRALException, TclRALException
 from pathlib import Path
-from typing import Any
 
 _logger = logging.getLogger(__name__)
 
@@ -29,6 +28,7 @@ class Database:
     A unique human-readable name is associated with each PyRAL session so that it can be easily
     managed in a dictionary.
     """
+    # TODO: Convert this class to instance methods and a singleton pattern
     # Path to the TclRAL library
     ral_lib_path = Path(__file__).parent / "tcl_scripts" / "init_TclRAL.tcl"
     sessions = {} # A dictionary of open TclRAL sessions keyed by session name
