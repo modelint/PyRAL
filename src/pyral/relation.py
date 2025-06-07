@@ -645,21 +645,23 @@ class Relation:
         return rval
 
     @classmethod
-    def print(cls, db: str, variable_name: str = _relation, table_name: Optional[str] = None):
+    def print(cls, db: str, variable_name: str = _relation, table_name: Optional[str] = None, printout: bool = True) -> str:
         """
         Given the name of a TclRAL relation variable, obtain its value and print it as a table.
 
         :param db: DB session name
         :param variable_name: Name of the TclRAL variable to print, also used to name the table if no table_name
         :param table_name:  If supplied, this name is used instead of the variable name to name the printed table
+        :param printout: Print to console if true
         """
         # convert the TclRAL string value held in the session variable into a PyRAL relation and print it
         rval = cls.make_pyrel(relation=cls.get_rval_string(db=db, variable_name=snake(variable_name)),
                               name=table_name if table_name else variable_name)
-        cls.relformat(rval)
+        return cls.relformat(rval, printout)
+
 
     @classmethod
-    def relformat(cls, rval: RelationValue):
+    def relformat(cls, rval: RelationValue, printout: bool = True) -> str:
         """
         Formats the PyRAL relation into a table and prints it using the imported tabulation module
 
@@ -671,8 +673,11 @@ class Relation:
         print(f"\n-- {tablename} --")
         attr_names = list(rval.header.keys())
         brows = [list(row.values()) for row in rval.body]
-        print(tabulate(tabular_data=brows, headers=attr_names,
-                       tablefmt="outline"))  # That last parameter chooses our table style
+        table_text = tabulate(tabular_data=brows, headers=attr_names, tablefmt="outline")
+        # That last parameter chooses our table style
+        if printout:
+            print(table_text)
+        return table_text
 
     @classmethod
     def union(cls, db: str, relations: Tuple[str, ...], svar_name: Optional[str] = None) -> RelationValue:
