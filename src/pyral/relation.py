@@ -666,11 +666,13 @@ class Relation:
         Formats the PyRAL relation into a table and prints it using the imported tabulation module
 
         :param rval: A PyRAL relation value
+        :param printout: Print to console if true
         """
         # Now we have what we need to generate a table
         # Print the relvar name if supplied, otherwise use the default name for the latest result
         tablename = rval.name if rval.name else '<unnamed>'
-        print(f"\n-- {tablename} --")
+        if printout:
+            print(f"\n-- {tablename} --")
         attr_names = list(rval.header.keys())
         brows = [list(row.values()) for row in rval.body]
         table_text = tabulate(tabular_data=brows, headers=attr_names, tablefmt="outline")

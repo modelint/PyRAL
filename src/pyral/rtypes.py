@@ -50,7 +50,6 @@ class Mult(Enum):
     ZERO_OR_ONE = '?'
 
 
-
 def snake(name: str) -> str:
     return name.replace(' ', '_')
 
