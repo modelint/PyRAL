@@ -941,7 +941,7 @@ class Relation:
         :return:
         """
         do_sort = "" if not sort_attrs else f" -{order.value} {' '.join(sort_attrs)} "
-        cmd = f"set {_relation} [relation tag ${{{relation}}} {{{tag_attr_name}}} {do_sort}]"
+        cmd = f"set {_relation} [relation tag ${{{snake(relation)}}} {{{tag_attr_name}}} {do_sort}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:
             cls.set_var(db=db, name=svar_name)
