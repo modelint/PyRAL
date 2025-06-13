@@ -174,6 +174,35 @@ class Relvar:
         Database.execute(db, cmd=verify_cmd)
 
     @classmethod
+    def set(cls, db: str, relvar: str, relation: str = _relation, svar_name: Optional[str] = None) -> RelationValue:
+        """
+
+        From the TclRAL documentation:
+
+        The set subcommand replaces the current value held by the relation variable named relvarName with the value
+        given by relationValue.
+
+        It is an error to attempt to assign a relation value to a relation variable that is of a different type
+        than the type of the value that the variable currently holds. In other words, it is not possible to change
+        the type of a relvar by assignment.
+
+        The return value of the subcommand is the current value held by relvarName.
+
+        If the relationValue argument is missing, then no attempt is made to change the value of relvarName.
+
+        :param db: DB session name
+        :param relvar: The name of an existing relvar
+        :param relation: This relation becomes the new value of the relvar
+        :param svar_name: An optional session variable that holds the result
+        """
+        cmd = f"set {_relation} [relvar set {{{relvar}}} ${{{relation}}}]"
+
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:
+            cls.set_var(db=db, name=svar_name)
+        return Relation.make_pyrel(result)
+
+    @classmethod
     def insert(cls, db: str, relvar: str, tuples: List[namedtuple], tr: Optional[str] = None):
         """
         Insert a set of tuples into the value of a relvar, modifying it in place.
