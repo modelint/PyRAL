@@ -11,7 +11,7 @@ from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.rtypes import Attribute, Order, Card, Extent
 
-Shaft_i = namedtuple('Shaft_i', 'ID Speed In_service')
+Shaft_i = namedtuple('Shaft_i', 'ID Speed Name In_service')
 
 ev = "ev"
 
@@ -22,27 +22,32 @@ def play():
         db=ev, name="Shaft", attrs=[
             Attribute(name="ID", type="string"),
             Attribute(name="Speed", type="double"),
+            Attribute(name="Name", type="string"),
             Attribute(name="In_service", type="boolean")], ids={1: ["ID"]}
     )
     Relvar.insert(db=ev, relvar="Shaft", tuples=[
-                        Shaft_i(ID='S1', Speed=31.3, In_service=True),
-                        Shaft_i(ID='S2', Speed=14.2, In_service=False),
-                        Shaft_i(ID='S3', Speed=20.16, In_service=True),
-                        Shaft_i(ID='S4', Speed=31.3, In_service=True),
+                        Shaft_i(ID='S1', Speed=31.3, Name="hello", In_service=True),
+                        Shaft_i(ID='S2', Speed=14.2, Name="hi there", In_service=False),
+                        Shaft_i(ID='S3', Speed=20.16, Name="NOT here", In_service=True),
+                        Shaft_i(ID='S4', Speed=31.3, Name="A", In_service=True),
                     ]
     )
+    n = "NOT here"
+    R = f"Name:<{n}>"
+    result = Relation.restrict(db=ev, relation="Shaft", restriction=R)
+    pass
     # Relvar.printall(db=ev)
-    Relation.create(db=ev, attrs=[
-        Attribute(name="ID", type="string"),
-        Attribute(name="Speed", type="double"),
-        Attribute(name="In_service", type="boolean")],
-                    tuples=[
-                        Shaft_i(ID='S1', Speed=31.3, In_service=False),
-                        Shaft_i(ID='S2', Speed=14.2, In_service=False),
-                        Shaft_i(ID='S3', Speed=20.16, In_service=False),
-                    ], svar_name="shafts_rv")
-
-    Relvar.set(db=ev, relvar="Shaft", relation="shafts_rv")
+    # Relation.create(db=ev, attrs=[
+    #     Attribute(name="ID", type="string"),
+    #     Attribute(name="Speed", type="double"),
+    #     Attribute(name="In_service", type="boolean")],
+    #                 tuples=[
+    #                     Shaft_i(ID='S1', Speed=31.3, In_service=False),
+    #                     Shaft_i(ID='S2', Speed=14.2, In_service=False),
+    #                     Shaft_i(ID='S3', Speed=20.16, In_service=False),
+    #                 ], svar_name="shafts_rv")
+    #
+    # Relvar.set(db=ev, relvar="Shaft", relation="shafts_rv")
     # Relation.set()
     # Relation.raw(db=ev, cmd_str="relation restrictwith ${shafts_rv} {[expr {$Speed > 14}]}",
     #              svar_name="raw_rv")
