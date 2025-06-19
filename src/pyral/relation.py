@@ -23,8 +23,50 @@ _logger = logging.getLogger(__name__)
 # to be the input.
 _relation = r'^relation'  # Name of the latest relation result. Carat prevents name collision
 _RANK = "_rank"  # Default name of the rank attribute added by extension using the rank command
-_TAG = "_tag" # Default name of the tag attribute added by the tag command
+_TAG = "_tag"  # Default name of the tag attribute added by the tag command
 session_variable_names = set()  # Maintain a list of temporary variable names in use
+
+
+def _shield_braces(text: str) -> tuple[str, dict[str, str]]:
+    """
+        Temporarily replaces all brace-enclosed substrings (e.g., {NOT REQUESTED})
+        with unique placeholder tokens, so that logic substitutions like 'AND'
+        or 'NOT' do not affect content inside braces.
+
+        Args:
+            text: The input string containing brace-enclosed segments.
+
+        Returns:
+            A tuple of:
+                - The input string with brace-enclosed segments replaced by tokens.
+                - A dictionary mapping token keys back to their original substrings.
+        """
+    protected = {}
+
+    def replacer(match):
+        key = f"__PROTECTED_{len(protected)}__"
+        protected[key] = match.group(0)  # include the braces
+        return key
+
+    result = re.sub(r'\{[^}]*\}', replacer, text)
+    return result, protected
+
+
+def _unshield_braces(text: str, protected: dict[str, str]) -> str:
+    """
+        Restores previously shielded brace-enclosed substrings back into the text.
+
+        Args:
+            text: The string containing placeholder tokens.
+            protected: A mapping from token keys to their original brace-wrapped values.
+
+        Returns:
+            The original string with all placeholders replaced by their corresponding
+            brace-enclosed content.
+        """
+    for key, value in protected.items():
+        text = text.replace(key, value)
+    return text
 
 
 class Relation:
@@ -46,7 +88,7 @@ class Relation:
         if db not in Database.sessions:
             raise KeyError(f"Database session '{db}' has not been initialized.")
 
-        db_rvs = Database.rv_names.setdefault(db,{})
+        db_rvs = Database.rv_names.setdefault(db, {})
         owner_rvs = db_rvs.setdefault(owner, set())
 
         if name in owner_rvs:
@@ -163,7 +205,6 @@ class Relation:
             return expansion
         else:
             raise ValueError(f"Non-final command: [{cmd_strings[0]}] must contain substitution marker: {_relation}")
-
 
     @classmethod
     def build_expr(cls, commands) -> str:
@@ -338,7 +379,7 @@ class Relation:
 
     @classmethod
     def semijoin(cls, db: str, rname2: str, attrs: Optional[Dict[str, str]] = None, rname1: str = _relation,
-             svar_name: Optional[str] = None) -> RelationValue:
+                 svar_name: Optional[str] = None) -> RelationValue:
         """
         Perform a semi join on two relations using an optional attribute mapping. If no attributes are specified,
         the semi-join is performed on same named attributes.
@@ -453,7 +494,7 @@ class Relation:
 
     @classmethod
     def intersect(cls, db: str, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None
-                 ) -> RelationValue:
+                  ) -> RelationValue:
         """
         Returns the intersection of two relations using the TclRAL intersect command.
 
@@ -503,9 +544,8 @@ class Relation:
         result = bool(int(Database.execute(db=db, cmd=cmd)))
         return result
 
-
     @classmethod
-    def cardinality(cls, db:str, rname: str = _relation) -> int:
+    def cardinality(cls, db: str, rname: str = _relation) -> int:
         """
         The cardinality subcommand returns the number tuples contained in the body of the relation.
 
@@ -645,7 +685,8 @@ class Relation:
         return rval
 
     @classmethod
-    def print(cls, db: str, variable_name: str = _relation, table_name: Optional[str] = None, printout: bool = True) -> str:
+    def print(cls, db: str, variable_name: str = _relation, table_name: Optional[str] = None,
+              printout: bool = True) -> str:
         """
         Given the name of a TclRAL relation variable, obtain its value and print it as a table.
 
@@ -658,7 +699,6 @@ class Relation:
         rval = cls.make_pyrel(relation=cls.get_rval_string(db=db, variable_name=snake(variable_name)),
                               name=table_name if table_name else variable_name)
         return cls.relformat(rval, printout)
-
 
     @classmethod
     def relformat(cls, rval: RelationValue, printout: bool = True) -> str:
@@ -734,7 +774,7 @@ class Relation:
 
     @classmethod
     def raw(cls, db: str, cmd_str: str, relation: str = _relation,
-                svar_name: Optional[str] = None) -> RelationValue:
+            svar_name: Optional[str] = None) -> RelationValue:
         """
         Passes tcl cmd txt straight through, but uses the variable and relation
         naming mechanism to pipeline input and output like all other commands
@@ -746,7 +786,7 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def heading(cls, db:str, relation: str = _relation):
+    def heading(cls, db: str, relation: str = _relation):
         cmd = f"relation heading ${{{relation}}}"
         result = Database.execute(db=db, cmd=cmd)
         return result
@@ -988,7 +1028,7 @@ class Relation:
 
     @classmethod
     def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,
-                  svar_name: Optional[str] = None) -> RelationValue:
+                 svar_name: Optional[str] = None) -> RelationValue:
         """
         Here we select zero or more tuples that match the supplied criteria.
 
@@ -1082,11 +1122,19 @@ class Relation:
                 string=restrict_tcl
             )
 
+            # Shield all {...} blocks so that we don't do boolean substitution inside
+            restrict_tcl, protected_map = _shield_braces(restrict_tcl)
+
             # Convert boolean logic operators and NOT
             restrict_tcl = restrict_tcl.replace(' OR ', ' || ') \
                 .replace(', ', ' && ') \
                 .replace(' AND ', ' && ') \
                 .replace('NOT ', '!')
+
+            # Restore the protected {...} blocks now that the boolean substitution has completed
+            restrict_tcl = _unshield_braces(restrict_tcl, protected_map)
+
+            # If we don't do the shielding, input like {NOT REQUESTED} will end up as {!REQUESTED} in the output
 
             rexpr = f"{{{restrict_tcl}}}"
             cmd = f"set {_relation} [relation restrict ${{{relation_s}}} t {rexpr}]"
@@ -1095,4 +1143,3 @@ class Relation:
         if svar_name:
             cls.set_var(db=db, name=svar_name)
         return cls.make_pyrel(result)
-

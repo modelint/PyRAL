@@ -33,7 +33,8 @@ def play():
                     ]
     )
     n = "NOT here"
-    R = f"Name:<{n}>"
+    i = "S3"
+    R = f"Name:<{n}>, ID:<{i}>"
     result = Relation.restrict(db=ev, relation="Shaft", restriction=R)
     pass
     # Relvar.printall(db=ev)
