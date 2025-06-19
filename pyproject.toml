@@ -1,10 +1,10 @@
 [build-system]
-requires      = ["setuptools>=62.8.2", "wheel"]
+requires      = ["setuptools>=62.8.3", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "mi-pyral"
-version = "2.8.2"
+version = "2.8.3"
 description = "PyRAL Pythonic interface to TclRAL"
 readme = "README.md"
 authors = [{ name = "Leon Starr", email = "leon_starr@modelint.com" }]
