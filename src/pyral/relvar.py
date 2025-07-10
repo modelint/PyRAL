@@ -228,10 +228,11 @@ class Relvar:
         :param tuples: A list of tuples named such that the attributes exactly match the relvar header
         :param tr:  Optional transaction name, add to this transaction if supplied
         """
+        relvar_s = snake(relvar)
         b = body(tuples)
 
         # Start command with the relvar command prefix
-        cmd = f"relvar insert {snake(relvar)} {b}"
+        cmd = f"relvar insert {relvar_s} {b}"
 
         # Add to open transaction if tr_name is provided
         if tr:
@@ -389,14 +390,15 @@ class Relvar:
         :return: A relation value with the same heading as the value held in relvarName and whose body contains either
         the single tuple that was updated or is empty if no matching tuple was found.
         """
+        relvar_name_s = snake(relvar_name)
         id_str = ""
         for id_attr, id_val in tid.items():
             id_str += f"{id_attr} {{{id_val}}} "
-        cmd = f'relvar deleteone {relvar_name} {id_str}'
+        cmd = f'relvar deleteone {relvar_name_s} {id_str}'
         if not tr:
-            return Database.execute(db, cmd)
+            return Database.execute(db=db, cmd=cmd)
         else:
-            Transaction.append_statement(db, name=tr, statement=cmd)
+            Transaction.append_statement(db=db, name=tr, statement=cmd)
             return ''
 
     @classmethod
