@@ -2,13 +2,16 @@
 relvar.py – TclRAL operations on relvars
 """
 
+# System
 import logging
 from typing import List, Dict, Any, Optional
+from collections import namedtuple
+
+# PyRAL
 from pyral.database import Database
 from pyral.transaction import Transaction
 from pyral.relation import Relation, _relation
-from pyral.rtypes import Attribute, Mult, delim, RelationValue, body, header, snake
-from collections import namedtuple
+from pyral.rtypes import *
 
 _logger = logging.getLogger(__name__)
 
@@ -349,20 +352,24 @@ class Relvar:
             id: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
             update: {'Type': 'Level Name'}
 
-        :param db: DB session name
-        :param relvar_name: The relvar to be updated
-        :param id: Identifier value for the tuple to be updated
-        :param update: A dictionary of attribute value pairs whose values will be applied
-        :return: A relation value with the same heading as the value held in relvarName and whose body contains either
-        the single tuple that was updated or is empty if no matching tuple was found.
+        Args:
+            db: DB session name
+            relvar_name: The relvar to be updated
+            id: Identifier value for the tuple to be updated
+            update:  A dictionary of attribute value pairs whose values will be applied
+
+        Returns:
+            A relation value with the same heading as the value held in relvarName and whose body contains either
+            the single tuple that was updated or is empty if no matching tuple was found.
         """
+        relvar_name_s = snake(relvar_name)
         id_str = ""
         for id_attr, id_val in id.items():
             id_str += f"{id_attr} {{{id_val}}} "
         update_str = ""
         for u_attr, u_val in update.items():
             update_str += u_attr + " {" + u_val + "}"
-        cmd = f'relvar updateone {relvar_name} t {{{id_str}}} {{tuple update $t {update_str}}}'
+        cmd = f'relvar updateone {relvar_name_s} t {{{id_str}}} {{tuple update $t {update_str}}}'
         return Database.execute(db, cmd)
 
     @classmethod

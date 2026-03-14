@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 
 # PyRAL
-from pyral.rtypes import RelationValue, Attribute, header, body, SetOp, SumExpr, snake, Order, Card, Extent
+from pyral.rtypes import *
 from pyral.database import Database
 
 _logger = logging.getLogger(__name__)
@@ -77,12 +77,15 @@ class Relation:
     @classmethod
     def declare_rv(cls, db: str, owner: str, name: str) -> str:
         """
-        Saves
+        Add a relational variable to the db session managed by the specified owner
 
-        :param db:
-        :param owner:
-        :param name:
-        :return:
+        Args:
+            db: Name of an active database session
+            owner: Name of the client specified owner responsible for managing this variable
+            name: Name of the variable
+
+        Returns:
+            The name of the relational variable
         """
         # Verify that db session exists
         if db not in Database.sessions:
@@ -95,7 +98,8 @@ class Relation:
             raise KeyError(f"Relational variable {name} already defined for owner {owner}")
 
         owner_rvs.add(name)
-        return f"{owner}__{name}"
+        # We replace any whitespace with underscores before passing into TclRAL
+        return f"{snake(owner)}__{snake(name)}"
 
     @classmethod
     def free_rvs(cls, db: str, owner: str, names: tuple[str, ...] = (), exclude: bool = False):
