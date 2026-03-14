@@ -63,6 +63,17 @@ class Database:
         return cls.rv_names.get(db, {}).copy()
 
     @classmethod
+    def get_all_rv_names(cls) -> dict[str, dict[str, set[str]]]:
+        """
+        Return the relational variable names dictionary for all open database sessions.
+        The purpose is mostly for diagnostics so that we can verify that there aren't any unneeded
+        relation variables still hanging around after a procedure in the client completes.
+
+        :return: Dictionary mapping db session name -> (owner -> set of RV names)
+        """
+        return {db: cls.get_rv_names(db) for db in cls.get_open_sessions()}
+
+    @classmethod
     def open_session(cls, name: str) -> Tk:
         """
         Open a PyRAL session.
