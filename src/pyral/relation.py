@@ -106,33 +106,37 @@ class Relation:
         """
         Unset relation variable names declared by the owner.
 
-        :param db: Database session name
-        :param owner: Name of the owner who declared the relational variables
-        :param names: Names to include or exclude (depending on `exclude`)
-        :param exclude: If True, *keep* the listed names and delete all others.
-                        If False, *delete only* the listed names. If names is empty, delete all.
+        Args:
+            db: Database session name
+            owner: Name of the owner who declared the relational variables
+            names: Names to include or exclude (depending on `exclude`)
+            exclude: If True, *keep* the listed names and delete all others.
+                If False, *delete only* the listed names. If names is empty, delete all.
         """
+        # Remove spaces from owner and names
+        owner_s = snake(owner)
+        names_s = [snake(s) for s in names]
         try:
-            owner_rvs = Database.rv_names[db][owner]
+            owner_rvs = Database.rv_names[db][owner_s]
         except KeyError:
-            raise KeyError(f"No such owner '{owner}' in session '{db}'")
+            raise KeyError(f"No such owner '{owner_s}' in session '{db}'")
 
         names_to_remove = (
-            owner_rvs - set(names) if exclude and names
-            else set(names) if names
+            owner_rvs - set(names_s) if exclude and names_s
+            else set(names_s) if names_s
             else owner_rvs
         )
 
         for name in names_to_remove:
-            cmd = f"unset {owner}__{name}"
+            cmd = f"unset {owner_s}__{name}"
             Database.execute(db=db, cmd=cmd)
 
         # Remove updated set of RVs or delete owner entry entirely if now empty
         remaining = owner_rvs - names_to_remove
         if remaining:
-            Database.rv_names[db][owner] = remaining
+            Database.rv_names[db][owner_s] = remaining
         else:
-            Database.rv_names[db].pop(owner, None)
+            Database.rv_names[db].pop(owner_s, None)
             if not Database.rv_names[db]:
                 Database.rv_names.pop(db, None)
 
@@ -687,6 +691,22 @@ class Relation:
         body = [dict(zip(header.keys(), r)) for r in b_rows]
         rval = RelationValue(name=name, header=header, body=body)
         return rval
+
+    @classmethod
+    def printc(cls, db: str, variable_name: str = _relation, table_name: Optional[str] = None,
+              printout: bool = True):
+        """
+        Given the name of a TclRAL relation variable, obtain its value and print it as a table.
+
+        :param db: DB session name
+        :param variable_name: Name of the TclRAL variable to print, also used to name the table if no table_name
+        :param table_name:  If supplied, this name is used instead of the variable name to name the printed table
+        :param printout: Print to console if true
+        """
+        # convert the TclRAL string value held in the session variable into a PyRAL relation and print it
+        rval = cls.make_pyrel(relation=cls.get_rval_string(db=db, variable_name=snake(variable_name)),
+                              name=table_name if table_name else variable_name)
+        cls.relformat(rval, printout)
 
     @classmethod
     def print(cls, db: str, variable_name: str = _relation, table_name: Optional[str] = None,
