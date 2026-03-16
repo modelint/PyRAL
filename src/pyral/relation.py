@@ -87,19 +87,21 @@ class Relation:
         Returns:
             The name of the relational variable
         """
+        owner_s = snake(owner)
+        name_s = snake(name)
         # Verify that db session exists
         if db not in Database.sessions:
             raise KeyError(f"Database session '{db}' has not been initialized.")
 
         db_rvs = Database.rv_names.setdefault(db, {})
-        owner_rvs = db_rvs.setdefault(owner, set())
+        owner_rvs = db_rvs.setdefault(owner_s, set())
 
-        if name in owner_rvs:
-            raise KeyError(f"Relational variable {name} already defined for owner {owner}")
+        if name_s in owner_rvs:
+            raise KeyError(f"Relational variable {name_s} already defined for owner {owner_s}")
 
-        owner_rvs.add(name)
+        owner_rvs.add(name_s)
         # We replace any whitespace with underscores before passing into TclRAL
-        return f"{snake(owner)}__{snake(name)}"
+        return f"{owner_s}__{name_s}"
 
     @classmethod
     def free_rvs(cls, db: str, owner: str, names: tuple[str, ...] = (), exclude: bool = False):
