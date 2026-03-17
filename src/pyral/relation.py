@@ -602,7 +602,7 @@ class Relation:
         Returns:
             Relation result of the subtraction
         """
-        cmd = f'set {_relation} [relation minus ${{{rname1}}} ${rname2}]'
+        cmd = f'set {_relation} [relation minus ${{{rname1}}} ${{{rname2}}}]'
         result = Database.execute(db, cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db, svar_name)
