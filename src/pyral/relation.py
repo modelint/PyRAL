@@ -568,7 +568,7 @@ class Relation:
         return result
 
     @classmethod
-    def subtract(cls, db: str, rname2: str, rname1: str = _relation, svar_name: Optional[str] = None
+    def subtract(cls, db: str, rname2: str = _relation, rname1: str = _relation, svar_name: Optional[str] = None
                  ) -> RelationValue:
         """
         Returns the set difference between two relations using the TclRAL minus command.
@@ -592,11 +592,15 @@ class Relation:
             rname1: subs
             rname2: supers
 
-        :param tclral: The TclRAL session
-        :param rname1: Subtracts value in rname2
-        :param rname2: Is subtracted from value in rname1
-        :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
-        :return Subtraction relation as a TclRAL string
+
+        Args:
+            db: The TclRAL session
+            rname1: Relation result is stored in this optional TclRAL variable for subsequent operations to use
+            rname2: Subtracts value in rname2 also optional
+            svar_name: Subtraction relation as a TclRAL string
+
+        Returns:
+            Relation result of the subtraction
         """
         cmd = f'set {_relation} [relation minus ${{{rname1}}} ${rname2}]'
         result = Database.execute(db, cmd)
