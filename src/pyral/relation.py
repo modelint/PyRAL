@@ -286,10 +286,11 @@ class Relation:
 
     @classmethod
     def _cmd_semijoin(cls, rname2: str, attrs, rname1: Optional[str] = None) -> str:
+        # TODO: Is rname1 really optional here?
         if rname1 is None:
             rname1 = _relation
         using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
-        return f"relation semijoin ${{{snake(rname1)}}} ${snake(rname2)}{using}"
+        return f"relation semijoin ${{{snake(rname1)}}} ${{{snake(rname2)}}}{using}"
 
     @classmethod
     def set_compare(cls, db: str, rname2: str, op: SetOp, rname1: str = _relation) -> bool:
@@ -388,7 +389,7 @@ class Relation:
         return attr_list[:-1] + "}"
 
     @classmethod
-    def semijoin(cls, db: str, rname2: str, attrs: Optional[Dict[str, str]] = None, rname1: str = _relation,
+    def semijoin(cls, db: str, rname2: str = _relation, attrs: Optional[Dict[str, str]] = None, rname1: str = _relation,
                  svar_name: Optional[str] = None) -> RelationValue:
         """
         Perform a semi join on two relations using an optional attribute mapping. If no attributes are specified,
