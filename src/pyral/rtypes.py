@@ -19,6 +19,17 @@ ProjectCmd = namedtuple('ProjectCmd', 'relation attributes')
 
 Cardinality = "relation cardinality $s"
 
+tcl_type = {
+    'str' : 'string',
+    'float' : 'double',
+    'int' : 'int',
+    'bool' : 'boolean'
+}
+"""
+Map of python to tcl data types. When specifying a system type, the PyRAL
+user can supply a python type knowing it will be converted in the outgoing command.
+"""
+
 
 class SetOp(Enum):
     subset = 'subsetof'

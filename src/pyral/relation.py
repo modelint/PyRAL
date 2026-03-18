@@ -829,7 +829,7 @@ class Relation:
         return result
 
     @classmethod
-    def extend(cls, db: str, attrs: dict[str, tuple[str, str]], relation: str = _relation,
+    def extend(cls, db: str, attrs: dict[str, str | int | float | bool], relation: str = _relation,
                svar_name: Optional[str] = None):
         """
         From TclRAL docs:
@@ -856,8 +856,16 @@ class Relation:
         Returns:
             Resulting relation as a PyRAL relation value
         """
-        extensions = [f'e {name} {snake(t[0])} "{{{snake(t[1])}}}"' for name, t in attrs.items()]
+        extensions = []
+        for n, v in attrs.items():
+            cmd_prefix = f"e {snake(n)} "  # TclRAL tuple var name 'e' and attr name
+            python_type_name = type(v).__name__
+            attr_type = f"{tcl_type[python_type_name]}"  # attr type name
+            val_str = f'"{{{snake(v)}}}"' if attr_type == "string" else str(v)
+            item_str = cmd_prefix + attr_type + " " + val_str
+            extensions.append(item_str)
         ext_str = ' '.join(extensions)
+
         cmd = f"set {_relation} [{cls._cmd_extend(relation=relation, ext_str=ext_str)}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
