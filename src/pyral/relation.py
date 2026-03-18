@@ -267,6 +267,12 @@ class Relation:
         return f'relation is ${{{snake(rname1)}}} {op.value} ${snake(rname2)}'
 
     @classmethod
+    def _cmd_extend(cls, ext_str: str, relation) -> str:
+        if relation is None:
+            relation = _relation
+        return f"relation extend ${{{snake(relation)}}} {ext_str}"
+
+    @classmethod
     def _cmd_project(cls, attributes, relation: Optional[str] = None) -> str:
         if relation is None:
             relation = _relation
@@ -821,6 +827,42 @@ class Relation:
         cmd = f"relation heading ${{{relation}}}"
         result = Database.execute(db=db, cmd=cmd)
         return result
+
+    @classmethod
+    def extend(cls, db: str, attrs: dict[str, tuple[str, str]], relation: str = _relation,
+               svar_name: Optional[str] = None):
+        """
+        From TclRAL docs:
+        --
+        relation extend relationValue tupleVariable ?attr1 type1 expr1 attr2 type2 expr2 ...?
+
+        The extend subcommand returns a new relation which has the same heading as relationValue with zero or more
+        additional attributes.
+
+        The first additional attribute is given by attr1 which has type type1 and its value is set to the result
+        returned by passing expr1 to the expr command. Subsequent attributes are treated similarly.
+
+        As each tuple in the body of relationValue is considered, its value is set into the variable whose name is
+        given by the tupleVariable argument. This variable is accessible to the extending expressions so that the
+        current tuple values of relationValue are available for computing the values of the new attributes.
+        --
+
+        Args:
+            db: DB session name
+            attrs: Dictionary keyed by attribute name with tuple value specifying type and value (no exprs for now)
+            relation:  Extend this relation
+            svar_name:  Set this TclRAL relation variable to the result
+
+        Returns:
+            Resulting relation as a PyRAL relation value
+        """
+        extensions = [f'e {name} {snake(t[0])} "{{{snake(t[1])}}}"' for name, t in attrs.items()]
+        ext_str = ' '.join(extensions)
+        cmd = f"set {_relation} [{cls._cmd_extend(relation=relation, ext_str=ext_str)}]"
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
 
     @classmethod
     def project(cls, db: str, attributes: Tuple[str, ...], exclude: bool = False, relation: str = _relation,
