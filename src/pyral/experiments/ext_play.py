@@ -1,5 +1,5 @@
 """
-sum_play.py -- Play around with summarization
+ext_play.py -- Play around with extend
 
 """
 # System

@@ -291,6 +291,15 @@ class Relation:
         return f"relation join ${{{snake(rname1)}}} ${snake(rname2)}{using}"
 
     @classmethod
+    def _cmd_semiminus(cls, attrs, rname1: Optional[str] = None, rname2: Optional[str] = None) -> str:
+        if rname1 is None:
+            rname1 = _relation
+        if rname2 is None:
+            rname2 = _relation
+        using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
+        return f"relation semiminus ${{{snake(rname1)}}} ${{{snake(rname2)}}}{using}"
+
+    @classmethod
     def _cmd_semijoin(cls, rname2: str, attrs, rname1: Optional[str] = None) -> str:
         # TODO: Is rname1 really optional here?
         if rname1 is None:
@@ -827,6 +836,45 @@ class Relation:
         cmd = f"relation heading ${{{relation}}}"
         result = Database.execute(db=db, cmd=cmd)
         return result
+
+    @classmethod
+    def semiminus(cls, db: str, rname2: str = _relation, attrs: Optional[Dict[str, str]] = None, rname1: str = _relation,
+                 svar_name: Optional[str] = None) -> RelationValue:
+        """
+        From TclRAL docs:
+        ---
+        ::ral::relation semiminus relationValue1 relationValue2 ?-using attrList? ?relationValue3 ...?
+
+        The semiminus subcommand computes the difference between relationValue2 and the semijoin of
+        relationValue1 and relationValue2.
+
+        The returned relation has a heading equal to that of relationValue2 and a body consisting of those tuples
+        from relationValue2 which would not have been included in the natural join of
+        relationValue1 and relationValue2.
+
+        The optional -using argument is treated in the same way as for the join subcommand.
+
+        Also like the semijoin subcommand, additional relationValue arguments may be given.
+        ---
+
+        Args:
+            db:
+            rname2:
+            attrs:
+            rname1:
+            svar_name:
+
+        Returns:
+
+        """
+        if attrs is None:
+            attrs = {}
+        cmd = f"set {{{_relation}}} [{cls._cmd_semiminus(rname1=rname1, rname2=rname2, attrs=attrs)}]"
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
+        pass
 
     @classmethod
     def extend(cls, db: str, attrs: dict[str, str | int | float | bool], relation: str = _relation,
