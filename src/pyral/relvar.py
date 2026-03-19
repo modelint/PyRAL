@@ -179,7 +179,6 @@ class Relvar:
     @classmethod
     def set(cls, db: str, relvar: str, relation: str = _relation, svar_name: Optional[str] = None) -> RelationValue:
         """
-
         From the TclRAL documentation:
 
         The set subcommand replaces the current value held by the relation variable named relvarName with the value
@@ -193,16 +192,20 @@ class Relvar:
 
         If the relationValue argument is missing, then no attempt is made to change the value of relvarName.
 
-        :param db: DB session name
-        :param relvar: The name of an existing relvar
-        :param relation: This relation becomes the new value of the relvar
-        :param svar_name: An optional session variable that holds the result
+        Args:
+            db: DB session name
+            relvar: The name of an existing relvar
+            relation: This relation becomes the new value of the relvar
+            svar_name: An optional session variable that holds the result
+
+        Returns:
+            The value of the relvar after the set operation is applied
         """
-        cmd = f"set {_relation} [relvar set {{{relvar}}} ${{{relation}}}]"
+        cmd = f"set {_relation} [relvar set {{{snake(relvar)}}} ${{{relation}}}]"
 
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:
-            cls.set_var(db=db, name=svar_name)
+            Relation.set_var(db=db, name=svar_name)
         return Relation.make_pyrel(result)
 
     @classmethod
