@@ -13,6 +13,7 @@ delim = '_' # TclRAL delimiter that replaces a space delimiter
 
 # Commands
 JoinCmd = namedtuple('JoinCmd', 'rname1 rname2 attrs')
+SemiJoinCmd = namedtuple('SemiJoinCmd', 'rname1 rname2 attrs')
 SetCompareCmd = namedtuple('SetCompareCmd', 'rname1 rname2 op')
 ProjectCmd = namedtuple('ProjectCmd', 'relation attributes')
 
@@ -20,10 +21,10 @@ ProjectCmd = namedtuple('ProjectCmd', 'relation attributes')
 Cardinality = "relation cardinality $s"
 
 tcl_type = {
-    'str' : 'string',
-    'float' : 'double',
-    'int' : 'int',
-    'bool' : 'boolean'
+    'str': 'string',
+    'float': 'double',
+    'int': 'int',
+    'bool': 'boolean'
 }
 """
 Map of python to tcl data types. When specifying a system type, the PyRAL
