@@ -330,17 +330,6 @@ class Relation:
             rexpr = f"{{{restrict_tcl}}}"
 
             cmd = f"relation restrict ${{{relation_s}}} t {rexpr}"
-            return cmd
-
-
-
-
-
-
-
-
-
-        cmd = f"relation restrict ${{{snake(relation)}}} {restriction}"
         return cmd
 
     @classmethod
