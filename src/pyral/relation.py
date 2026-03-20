@@ -242,7 +242,7 @@ class Relation:
         # Here is each named tuple defining a Relation method that can be built into an expression
         relation_method = {
             "SetCompareCmd": lambda c: cls._cmd_set_compare(rname1=c.rname1, rname2=c.rname2, op=c.op),
-            "ProjectCmd": lambda c: cls._cmd_project(relation=c.relation, attributes=c.attributes),
+            "ProjectCmd": lambda c: cls._cmd_project(db=c.db, relation=c.relation, attributes=c.attributes),
             "JoinCmd": lambda c: cls._cmd_join(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs),
             "SemiJoinCmd": lambda c: cls._cmd_semijoin(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs),
             "RestrictCmd": lambda c: cls._cmd_restrict(relation=c.relation, restriction=c.restriction),
@@ -333,10 +333,30 @@ class Relation:
         return cmd
 
     @classmethod
-    def _cmd_project(cls, attributes, relation: Optional[str] = None) -> str:
+    def _cmd_project(cls, db: str, attributes: Tuple[str, ...], exclude: bool = False, relation: str = _relation) -> str:
         if relation is None:
-            relation = _relation
-        return f"relation project ${{{snake(relation)}}} {' '.join(attributes)}"
+            relation_s = _relation
+        else:
+            relation_s = snake(relation)
+
+        # Create a list of attributes to project by inclusion or exclusion
+        if exclude:
+            # Use heading method to get all attributes defined on the relation
+            # and then project on all of these except those attributes provided in the tuple
+            attr_types = Relation.heading(db=db, relation=relation_s)
+            # heading returns a string delimited by spaces with attribute type pairs
+            tokens = attr_types.split()
+            # Now skip over all the type names and just grab the attribute names (1st, 3rd, ...)
+            pairs = zip(tokens[::2], tokens[1::2])
+            # Exclude the provided attribute names
+            project_attrs = [name for name, _ in pairs if name not in attributes]
+        else:
+            # Just use the provided attributes
+            project_attrs = list(attributes)
+
+        attributes_s = ' '.join(snake(s) for s in project_attrs)
+        cmd = f"relation project ${{{relation_s}}} {attributes_s}"
+        return cmd
 
     @classmethod
     def _cmd_union(cls, relations) -> str:
@@ -996,23 +1016,7 @@ class Relation:
         :param svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use
         :return Resulting relation as a PyRAL relation value
         """
-        # Create a list of attributes to project by inclusion or exclusion
-        if exclude:
-            # Use heading method to get all attributes defined on the relation
-            # and then project on all of these except those attributes provided in the tuple
-            attr_types = Relation.heading(db=db, relation=relation)
-            # heading returns a string delimited by spaces with attribute type pairs
-            tokens = attr_types.split()
-            # Now skip over all the type names and just grab the attribute names (1st, 3rd, ...)
-            pairs = zip(tokens[::2], tokens[1::2])
-            # Exclude the provided attribute names
-            project_attrs = [name for name, _ in pairs if name not in attributes]
-        else:
-            # Just use the provided attributes
-            project_attrs = list(attributes)
-
-        attributes_s = (snake(s) for s in project_attrs)
-        cmd = f"set {_relation} [{cls._cmd_project(relation=relation, attributes=attributes_s)}]"
+        cmd = f"set {_relation} [{cls._cmd_project(db=db, relation=relation, attributes=attributes, exclude=exclude)}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)

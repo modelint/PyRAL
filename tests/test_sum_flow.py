@@ -84,7 +84,7 @@ def test_sum_expr(flow_db):
 
     sum_expr = Relation.build_expr(commands=[
         JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
-        ProjectCmd(attributes=("From_action",), relation=None),
+        ProjectCmd(db=db, attributes=("From_action",), relation=None),
         SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
     ])
 

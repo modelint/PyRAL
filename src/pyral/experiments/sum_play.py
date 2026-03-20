@@ -40,6 +40,8 @@ def play():
         ActionState_i(ID="ACTN3", State="E"),
     ])
     Relation.print(db=fdb, variable_name=action_states)
+    Relation.project(db=fdb, relation=action_states, attributes=("ID",), exclude=True)
+    Relation.print(db=fdb, table_name="PROJECT CHECK")
 
     Relation.create(db=fdb, attrs=[
         Attribute('From_action', 'string'),
