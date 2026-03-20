@@ -16,7 +16,8 @@ JoinCmd = namedtuple('JoinCmd', 'rname1 rname2 attrs')
 SemiJoinCmd = namedtuple('SemiJoinCmd', 'rname1 rname2 attrs')
 SetCompareCmd = namedtuple('SetCompareCmd', 'rname1 rname2 op')
 ProjectCmd = namedtuple('ProjectCmd', 'relation attributes')
-
+RestrictCmd = namedtuple('RestrictCmd', 'relation restriction')
+CardinalityCmd = namedtuple('CardinalityCmd', 'rname')
 
 Cardinality = "relation cardinality $s"
 

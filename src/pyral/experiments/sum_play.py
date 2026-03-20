@@ -64,14 +64,18 @@ def play():
     Relation.restrict(db=fdb, restriction=R)
     Relation.print(db=fdb, table_name="Not completed")
 
-    # sum_expr = Relation.build_expr(commands=[
-    #     JoinCmd(rname1="s", rname2=flow_deps, attrs={'ID': 'To_action'}),
-    #     SemiJoinCmd(rname1=None, rname2=action_states, attrs={'From_action': 'ID'}),
-    # ])
-    #
-    # s = Relation.summarize(db=fdb, relation="required_inputs", per_attrs=("To_action",),
-    #                summaries=(SumExpr(attr=Attribute(name="Can_execute", type="boolean"), expr=sum_expr),),
-    #                svar_name="solution")
-    #
-    # Relation.print(db=fdb, variable_name="solution")
+    c = Relation.cardinality(db=fdb)
+
+    sum_expr = Relation.build_expr(commands=[
+        JoinCmd(rname1="s", rname2=flow_deps, attrs={'ID': 'To_action'}),
+        SemiJoinCmd(rname1=None, rname2=action_states, attrs={'From_action': 'ID'}),
+        RestrictCmd(relation=None, restriction="NOT State:C"),
+        CardinalityCmd(rname=None)
+    ])
+
+    s = Relation.summarize(db=fdb, relation=unenabled_actions, per_attrs=("ID",),
+                           summaries=(SumExpr(attr=Attribute(name="Complete", type="int"), expr=sum_expr),),
+                           svar_name="solution")
+
+    Relation.print(db=fdb, variable_name="solution")
     pass

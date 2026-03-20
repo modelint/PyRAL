@@ -245,6 +245,8 @@ class Relation:
             "ProjectCmd": lambda c: cls._cmd_project(relation=c.relation, attributes=c.attributes),
             "JoinCmd": lambda c: cls._cmd_join(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs),
             "SemiJoinCmd": lambda c: cls._cmd_semijoin(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs),
+            "RestrictCmd": lambda c: cls._cmd_restrict(relation=c.relation, restriction=c.restriction),
+            "CardinalityCmd": lambda c: cls._cmd_cardinality(rname=c.rname),
         }
 
         # Now we create a list of command strings in reverse order
@@ -260,6 +262,13 @@ class Relation:
 
         # Now call this recursive function to perform command substitution and yield our single TclRAL command string
         return cls._expand_expr(cmd_strings)  # TODO: need to specify the db
+
+    @classmethod
+    def _cmd_cardinality(cls, rname: Optional[str] = None) -> str:
+        if rname is None:
+            rname = _relation
+        cmd = f'relation cardinality ${{{snake(rname)}}}'
+        return cmd
 
     @classmethod
     def _cmd_set_compare(cls, rname2: str, op: SetOp, rname1: Optional[str] = None) -> str:
@@ -642,7 +651,7 @@ class Relation:
         :param rname: The tuples in the body of this relation are counted
         :return:
         """
-        cmd = f'relation cardinality ${{{snake(rname)}}}'
+        cmd = f"set {{{_relation}}} [{cls._cmd_cardinality(rname=rname)}]"
         result = int(Database.execute(db=db, cmd=cmd))
         return result
 
