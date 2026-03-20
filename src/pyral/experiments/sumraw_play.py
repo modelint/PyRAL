@@ -1,5 +1,5 @@
 """
-sum_play.py -- Play around with summarization
+sumraw_play.py -- Play around with summarization
 
 """
 # System
@@ -10,7 +10,8 @@ from pyral.database import Database
 from pyral.relvar import Relvar
 from pyral.relation import Relation
 from pyral.transaction import Transaction
-from pyral.rtypes import Attribute, SetOp, JoinCmd, SetCompareCmd, ProjectCmd, SumExpr
+from pyral.rtypes import Attribute
+
 
 Flow_Dependency_i = namedtuple('Flow_Dependency_i', 'From_action To_action')
 Actionf_i = namedtuple('Actionf_i', 'From_action')
@@ -19,8 +20,7 @@ Action_i = namedtuple('Action_i', 'ID')
 
 fdb = "fdb"  # Flow database example
 
-
-class SumTest2:
+class SumTest:
     """
     Summarization example
     """
@@ -59,6 +59,7 @@ class SumTest2:
 
     @classmethod
     def play(cls):
+
         # Specify a set of initial from actions that have completed execution
         Relation.create(db=fdb, attrs=[Attribute(name="From_action", type="string")],
                         tuples=[
@@ -83,29 +84,11 @@ class SumTest2:
         # Then test to see if this set is a subset of the xactions
         # If so, the downstream action has all dependencies fulfilled and can now execute (true)
         # Otherwise, there are some required input actions that have not just executed
+        Relation.raw(
+            db=fdb, cmd_str=r"relation summarizeby $required_inputs To_action s Can_execute boolean {\
+            [relation is [relation project [relation join $required_inputs $s] From_action] subsetof $xactions]}",
+            svar_name="c"
+        )
+        Relation.print(db=fdb, variable_name="c")
 
-        sum_expr = Relation.build_expr(commands=[
-            JoinCmd(rname1="s", rname2="required_inputs", attrs=None),
-            ProjectCmd(attributes=("From_action",), relation=None),
-            SetCompareCmd(rname2="xactions", op=SetOp.subset, rname1=None)
-        ])
 
-        s = Relation.summarize(db=fdb, relation="required_inputs", per_attrs=("To_action",),
-                       summaries=(SumExpr(attr=Attribute(name="Can_execute", type="boolean"), expr=sum_expr),),
-                       svar_name="solution")
-
-        Relation.print(db=fdb, variable_name="solution")
-        pass
-
-        # Relation.raw(
-        #     db=fdb, cmd_str=r"relation summarizeby $required_inputs To_action s Can_execute boolean {\
-        #     [relation is [relation project [relation join $required_inputs $s] From_action] subsetof $xactions]}",
-        #     svar_name="c"
-        # )
-        # Relation.join(db=fdb, rname2="required_inputs", rname1="s")
-        # Relation.project(db=fdb, attributes=("From_action",))
-        # Relation.set_compare(db=fdb, rname2="xactions", op=SetOp.subset)
-
-        # relation join ${s} $required_inputs'
-        # relation project ${^relation} From_action'
-        # relation is ${^relation} subsetof $xactions'

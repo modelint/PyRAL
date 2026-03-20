@@ -274,6 +274,67 @@ class Relation:
         return f"relation extend ${{{snake(relation)}}} {ext_str}"
 
     @classmethod
+    def _cmd_restrict(cls, restriction: Optional[str] = None, relation: Optional[str] = None) -> str:
+        if relation is None:
+            relation_s = _relation
+        else:
+            relation_s = snake(relation)
+
+        if not restriction:
+            cmd = f"set {_relation} [set {relation_s}]"
+        else:
+            # Handle arithmetic comparisons like Speed > 14
+            restrict_tcl = re.sub(
+                pattern=r'(\w+)\s*(==|!=|>=|<=|<|>)\s*(-?\d+(?:\.\d+)?)',
+                repl=r'[expr [tuple extract $t \1] \2 \3]',
+                string=restriction
+            )
+
+            # Handle attr:<value> form for string match
+            restrict_tcl = re.sub(
+                pattern=r'([\w_]+):<([^>]*)>',
+                repl=r'[string match {\2} [tuple extract $t \1]]',
+                string=restrict_tcl
+            )
+
+            # Handle attr:value form for string match (NEW addition)
+            restrict_tcl = re.sub(
+                pattern=r'([\w_]+):([^\s<>()&|!]+)',
+                repl=r'[string match {\2} [tuple extract $t \1]]',
+                string=restrict_tcl
+            )
+
+            # Shield all {...} blocks so that we don't do boolean substitution inside
+            restrict_tcl, protected_map = _shield_braces(restrict_tcl)
+
+            # Convert boolean logic operators and NOT
+            restrict_tcl = restrict_tcl.replace(' OR ', ' || ') \
+                .replace(', ', ' && ') \
+                .replace(' AND ', ' && ') \
+                .replace('NOT ', '!')
+
+            # Restore the protected {...} blocks now that the boolean substitution has completed
+            restrict_tcl = _unshield_braces(restrict_tcl, protected_map)
+
+            # If we don't do the shielding, input like {NOT REQUESTED} will end up as {!REQUESTED} in the output
+
+            rexpr = f"{{{restrict_tcl}}}"
+
+            cmd = f"relation restrict ${{{relation_s}}} t {rexpr}"
+            return cmd
+
+
+
+
+
+
+
+
+
+        cmd = f"relation restrict ${{{snake(relation)}}} {restriction}"
+        return cmd
+
+    @classmethod
     def _cmd_project(cls, attributes, relation: Optional[str] = None) -> str:
         if relation is None:
             relation = _relation
@@ -301,10 +362,11 @@ class Relation:
         return f"relation semiminus ${{{snake(rname1)}}} ${{{snake(rname2)}}}{using}"
 
     @classmethod
-    def _cmd_semijoin(cls, rname2: str, attrs, rname1: Optional[str] = None) -> str:
-        # TODO: Is rname1 really optional here?
+    def _cmd_semijoin(cls, rname2: Optional[str], attrs, rname1: Optional[str] = None) -> str:
         if rname1 is None:
             rname1 = _relation
+        if rname2 is None:
+            rname2 = _relation
         using = f" -using {cls.make_attr_list(attrs)}" if attrs else ""
         return f"relation semijoin ${{{snake(rname1)}}} ${{{snake(rname2)}}}{using}"
 
@@ -952,7 +1014,7 @@ class Relation:
             project_attrs = list(attributes)
 
         attributes_s = (snake(s) for s in project_attrs)
-        cmd = f"set {_relation} [{cls._cmd_project(relation=snake(relation), attributes=attributes_s)}]"
+        cmd = f"set {_relation} [{cls._cmd_project(relation=relation, attributes=attributes_s)}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)
@@ -1227,48 +1289,7 @@ class Relation:
         :param svar_name: An optional session variable that holds the result
         :return: The TclRAL string result representing the restricted tuple set
         """
-        relation_s = snake(relation)
-        if not restriction:
-            cmd = f"set {_relation} [set {relation_s}]"
-        else:
-            # Handle arithmetic comparisons like Speed > 14
-            restrict_tcl = re.sub(
-                pattern=r'(\w+)\s*(==|!=|>=|<=|<|>)\s*(-?\d+(?:\.\d+)?)',
-                repl=r'[expr [tuple extract $t \1] \2 \3]',
-                string=restriction
-            )
-
-            # Handle attr:<value> form for string match
-            restrict_tcl = re.sub(
-                pattern=r'([\w_]+):<([^>]*)>',
-                repl=r'[string match {\2} [tuple extract $t \1]]',
-                string=restrict_tcl
-            )
-
-            # Handle attr:value form for string match (NEW addition)
-            restrict_tcl = re.sub(
-                pattern=r'([\w_]+):([^\s<>()&|!]+)',
-                repl=r'[string match {\2} [tuple extract $t \1]]',
-                string=restrict_tcl
-            )
-
-            # Shield all {...} blocks so that we don't do boolean substitution inside
-            restrict_tcl, protected_map = _shield_braces(restrict_tcl)
-
-            # Convert boolean logic operators and NOT
-            restrict_tcl = restrict_tcl.replace(' OR ', ' || ') \
-                .replace(', ', ' && ') \
-                .replace(' AND ', ' && ') \
-                .replace('NOT ', '!')
-
-            # Restore the protected {...} blocks now that the boolean substitution has completed
-            restrict_tcl = _unshield_braces(restrict_tcl, protected_map)
-
-            # If we don't do the shielding, input like {NOT REQUESTED} will end up as {!REQUESTED} in the output
-
-            rexpr = f"{{{restrict_tcl}}}"
-            cmd = f"set {_relation} [relation restrict ${{{relation_s}}} t {rexpr}]"
-
+        cmd = f"set {_relation} [{cls._cmd_restrict(relation=relation, restriction=restriction)}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:
             cls.set_var(db=db, name=svar_name)
