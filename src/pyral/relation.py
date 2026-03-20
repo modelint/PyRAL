@@ -244,6 +244,7 @@ class Relation:
             "SetCompareCmd": lambda c: cls._cmd_set_compare(rname1=c.rname1, rname2=c.rname2, op=c.op),
             "ProjectCmd": lambda c: cls._cmd_project(relation=c.relation, attributes=c.attributes),
             "JoinCmd": lambda c: cls._cmd_join(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs),
+            "SemiJoinCmd": lambda c: cls._cmd_semijoin(rname1=c.rname1, rname2=c.rname2, attrs=c.attrs),
         }
 
         # Now we create a list of command strings in reverse order
