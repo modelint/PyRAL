@@ -9,6 +9,7 @@ from tabulate import tabulate
 from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
 
+from pyral.exceptions import TclRALException
 # PyRAL
 from pyral.rtypes import *
 from pyral.database import Database
@@ -131,7 +132,10 @@ class Relation:
 
         for name in names_to_remove:
             cmd = f"unset {owner_s}__{name}"
-            Database.execute(db=db, cmd=cmd)
+            try:
+                Database.execute(db=db, cmd=cmd)
+            except TclRALException:
+                pass
 
         # Remove updated set of RVs or delete owner entry entirely if now empty
         remaining = owner_rvs - names_to_remove

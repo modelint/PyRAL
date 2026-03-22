@@ -54,7 +54,7 @@ def main():
     #     SumTest.do_r()
     if args.test:
         # from print_table import TableTest
-        from pyral.experiments.sum_play import play
+        # from pyral.experiments.sum_play import play
         # from pyral.experiments.sum_play2 import SumTest2
         # from pyral.experiments.union_play import play
         # from pyral.experiments.join_play import play
@@ -62,6 +62,7 @@ def main():
         # from pyral.experiments.update_play import play
         # from pyral.experiments.semiminus_play import play
         # from pyral.experiments.setops_play import SetPlay
+        from pyral.experiments.rv_play import play
         # SetPlay.setup()
         play()
         # from pyral.experiments.dogs_example import Dogs

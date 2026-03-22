@@ -171,9 +171,14 @@ class Database:
             _logger.error(f"Database {db} is not open")
             raise PyRALException
         except TclError as e:
-            _logger.error(f"TclRAL error in db [{db}] on command: [{cmd}]")
-            _logger.exception(e)
-            raise TclRALException
+            if "can't unset" in e.args[0]:
+                _logger.info(f"TclRAL ingored unused variable: [{cmd}]")
+                result = ""
+                pass
+            else:
+                _logger.error(f"TclRAL error in db [{db}] on command: [{cmd}]")
+                _logger.exception(e)
+                raise TclRALException
 
         if log:
             _logger.info(f"result: {result}")
