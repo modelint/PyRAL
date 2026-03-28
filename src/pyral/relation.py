@@ -842,15 +842,16 @@ class Relation:
         # Now we have what we need to generate a table
         # Print the relvar name if supplied, otherwise use the default name for the latest result
         tablename = rval.name if rval.name else '<unnamed>'
+        tableheader = f"\n-- {tablename} --\n"
         if printout:
-            print(f"\n-- {tablename} --")
+            print(tableheader)
         attr_names = list(rval.header.keys())
         brows = [list(row.values()) for row in rval.body]
         table_text = tabulate(tabular_data=brows, headers=attr_names, tablefmt="outline")
         # That last parameter chooses our table style
         if printout:
             print(table_text)
-        return table_text
+        return tableheader + table_text
 
     @classmethod
     def union(cls, db: str, relations: Tuple[str, ...], svar_name: Optional[str] = None) -> RelationValue:
