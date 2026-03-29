@@ -842,7 +842,8 @@ class Relation:
         # Now we have what we need to generate a table
         # Print the relvar name if supplied, otherwise use the default name for the latest result
         tablename = rval.name if rval.name else '<unnamed>'
-        tableheader = f"\n-- {tablename} --\n"
+        # tableheader = f"\n-- {tablename} --\n"
+        tableheader = f"[{tablename}]"
         if printout:
             print(tableheader)
         attr_names = list(rval.header.keys())
