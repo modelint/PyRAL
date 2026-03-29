@@ -852,7 +852,7 @@ class Relation:
         # That last parameter chooses our table style
         if printout:
             print(table_text)
-        return tableheader + table_text
+        return f"{tableheader}\n{table_text}"
 
     @classmethod
     def union(cls, db: str, relations: Tuple[str, ...], svar_name: Optional[str] = None) -> RelationValue:

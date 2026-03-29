@@ -72,9 +72,12 @@ def play():
     # result2 = Relation.semijoin(db=acdb, rname1="Pilot", rname2="Fixed Wing Aircraft", attrs={"Tail_number": "ID"},
     #                             svar_name=rv.semijoin_example)
 
-    print()
+    # print()
     Relation.print(db=acdb, variable_name=rv.join_example)
     # Relation.print(db=acdb, variable_name=rv.semijoin_example)
+    # t = Relation.print(db=acdb, variable_name=rv.join_example, printout=False)
+    # print(t)
+    # print()
 
     before = Database.get_rv_names(db=acdb)
     print("---")
