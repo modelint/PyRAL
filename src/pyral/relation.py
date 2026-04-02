@@ -122,7 +122,8 @@ class Relation:
         try:
             owner_rvs = Database.rv_names[db][owner_s]
         except KeyError:
-            raise KeyError(f"No such owner '{owner_s}' in session '{db}'")
+            _logger.warning(f"No such owner '{owner_s}' declared in session '{db}'")
+            return
 
         names_to_remove = (
             owner_rvs - set(names_s) if exclude and names_s
