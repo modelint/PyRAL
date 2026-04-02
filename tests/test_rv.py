@@ -56,7 +56,7 @@ def test_rv_declare2(aircraft_db):
     Relation.free_rvs(db=aircraft_db, owner="P1")
     assert Database.rv_names == {}
 
-# An warnign error is now logged instead
+# An warning error is now logged instead
 # def test_rv_free_bad_owner(aircraft_db):
 #     with pytest.raises(KeyError):
 #         Relation.free_rvs(db=aircraft_db, owner="P2")
