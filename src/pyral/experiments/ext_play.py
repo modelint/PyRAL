@@ -32,7 +32,8 @@ def play():
 
     Relation.print(db=fdb, variable_name="actions")
 
-    r = Relation.extend(db=fdb, relation="actions", attrs={'State': 'U'}, svar_name="c")
+    Relation.extend(db=fdb, relation="actions", attrs={'State': 'Hello there'}, svar_name="c")
+    # r = Relation.extend(db=fdb, relation="actions", attrs={'State': 'U'}, svar_name="c")
     pass
     # Relation.extend(db=fdb, relation="actions", attrs={'Number': 1.2}, svar_name="c")
     # Relation.extend(db=fdb, relation="actions", attrs={'Number': 3}, svar_name="c")

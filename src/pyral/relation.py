@@ -282,9 +282,21 @@ class Relation:
         return f'relation is ${{{snake(rname1)}}} {op.value} ${snake(rname2)}'
 
     @classmethod
-    def _cmd_extend(cls, ext_str: str, relation) -> str:
+    def _cmd_extend(cls, attrs: dict[str, str | int | float | bool], relation) -> str:
         if relation is None:
             relation = _relation
+
+        extensions = []
+        for n, v in attrs.items():
+            cmd_prefix = f"e {snake(n)} "  # TclRAL tuple var name 'e' and attr name
+            python_type_name = type(v).__name__
+            attr_type = f"{tcl_type[python_type_name]}"  # attr type name
+            val_str = f'"{{{v}}}"' if attr_type == "string" else str(v)
+            item_str = cmd_prefix + attr_type + " " + val_str
+            extensions.append(item_str)
+
+        ext_str = ' '.join(extensions)
+
         return f"relation extend ${{{snake(relation)}}} {ext_str}"
 
     @classmethod
@@ -992,17 +1004,7 @@ class Relation:
         Returns:
             Resulting relation as a PyRAL relation value
         """
-        extensions = []
-        for n, v in attrs.items():
-            cmd_prefix = f"e {snake(n)} "  # TclRAL tuple var name 'e' and attr name
-            python_type_name = type(v).__name__
-            attr_type = f"{tcl_type[python_type_name]}"  # attr type name
-            val_str = f'"{{{snake(v)}}}"' if attr_type == "string" else str(v)
-            item_str = cmd_prefix + attr_type + " " + val_str
-            extensions.append(item_str)
-        ext_str = ' '.join(extensions)
-
-        cmd = f"set {_relation} [{cls._cmd_extend(relation=relation, ext_str=ext_str)}]"
+        cmd = f"set {_relation} [{cls._cmd_extend(relation=relation, attrs=attrs)}]"
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)
