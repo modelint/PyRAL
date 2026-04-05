@@ -27,6 +27,18 @@ _RANK = "_rank"  # Default name of the rank attribute added by extension using t
 _TAG = "_tag"  # Default name of the tag attribute added by the tag command
 session_variable_names = set()  # Maintain a list of temporary variable names in use
 
+def _next_tuple_var(c: str) -> str:
+    """
+    For TclRAL commands that use temporary embedded tuple variables, we keep them unique by
+    generating in alphabetic sequence.
+
+    Args:
+        c: Character last used
+
+    Returns:
+        next character to be used as a tuple variable name
+    """
+    return chr(ord(c) + 1)
 
 def _shield_braces(text: str) -> tuple[str, dict[str, str]]:
     """
@@ -288,16 +300,22 @@ class Relation:
 
         extensions = []
         for n, v in attrs.items():
-            cmd_prefix = f"e {snake(n)} "  # TclRAL tuple var name 'e' and attr name
+            cmd_prefix = f"{{{snake(n)}}} "  # TclRAL tuple var name 't' and attr name
             python_type_name = type(v).__name__
             attr_type = f"{tcl_type[python_type_name]}"  # attr type name
-            val_str = f'"{{{v}}}"' if attr_type == "string" else str(v)
+            val_str = f'{{{{{v}}}}}' if attr_type == "string" else str(v)
+            # TclRAL requires either double brackets {{some value}} or quotes "some value"
+            # So we have {{{ to get the first { in the output and then {{ to get the second
+            # Line below also works
+            # val_str = f'"{{{v}}}"' if attr_type == "string" else str(v)
             item_str = cmd_prefix + attr_type + " " + val_str
             extensions.append(item_str)
 
         ext_str = ' '.join(extensions)
+        r = f"relation extend ${{{snake(relation)}}} e {ext_str}"
+        return r
 
-        return f"relation extend ${{{snake(relation)}}} {ext_str}"
+        # return f"relation extend ${{{snake(relation)}}} t {ext_str}"
 
     @classmethod
     def _cmd_restrict(cls, restriction: Optional[str] = None, relation: Optional[str] = None) -> str:

@@ -32,7 +32,8 @@ def play():
 
     Relation.print(db=fdb, variable_name="actions")
 
-    Relation.extend(db=fdb, relation="actions", attrs={'State': 'Hello there'}, svar_name="c")
+    # Relation.extend(db=fdb, relation="actions", attrs={'State': 'Hello there'}, svar_name="c")
+    Relation.extend(db=fdb, relation="actions", attrs={'Current': 'C', 'Previous': 'U'}, svar_name="c")
     # r = Relation.extend(db=fdb, relation="actions", attrs={'State': 'U'}, svar_name="c")
     pass
     # Relation.extend(db=fdb, relation="actions", attrs={'Number': 1.2}, svar_name="c")
@@ -40,7 +41,11 @@ def play():
     # Relation.extend(db=fdb, relation="actions", attrs={'Status': True}, svar_name="c")
 
     # Relation.raw(
-    #     db=fdb, cmd_str=r'relation extend $actions e State string {"U"}',
+    #     db=fdb, cmd_str=r'relation extend $actions e State string {"U"} Previous string {"X"}',
+    #     svar_name="c"
+    # )
+    # Relation.raw(
+    #     db=fdb, cmd_str=r'relation extend $actions e State string {{U}}',
     #     svar_name="c"
     # )
     Relation.print(db=fdb, variable_name="c")
