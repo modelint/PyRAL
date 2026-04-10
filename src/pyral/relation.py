@@ -874,7 +874,7 @@ class Relation:
         # Print the relvar name if supplied, otherwise use the default name for the latest result
         tablename = rval.name if rval.name else '<unnamed>'
         # tableheader = f"\n-- {tablename} --\n"
-        tableheader = f"[{tablename}]"
+        tableheader = f"[-- {tablename} --]"  # the -- decoration to search table in vim without having to escape [ char
         if printout:
             print(tableheader)
         attr_names = list(rval.header.keys())
