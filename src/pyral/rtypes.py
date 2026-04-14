@@ -103,7 +103,7 @@ def body_dict(tuples: list[dict[str, str | int | float]]) -> str:
     for t in tuples:
         body_text += '{'
         for a, v in t.items():
-            body_text += f"{a} {{{v}}} "
+            body_text += f"{snake(a)} {{{v}}} "
         body_text = body_text[:-1] + '} '
     return body_text[:-1]
 
@@ -122,7 +122,7 @@ def body_tuple(attrs: List[str], tuples: List[tuple]) -> str:
     for t in tuples:
         body_text += '{'
         for a, v in zip(attrs, t):
-            body_text += f"{a.name} {{{v}}} "
+            body_text += f"{snake(a.name)} {{{v}}} "
         body_text = body_text[:-1] + '} '
     return body_text[:-1]
 
@@ -145,6 +145,8 @@ def body(tuples: List[namedtuple]) -> str:
     for t in tuples:
         body_text += '{'
         instance_tuple = t._asdict()
+        # Note we don't need to snake the attribute name since it must already be
+        # snakecase using the _Attribute named tuple
         for k, v in instance_tuple.items():
             body_text += f"{k} {{{v}}} "  # Spaces are allowed in values
         body_text = body_text[:-1] + '} '
