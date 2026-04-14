@@ -438,7 +438,7 @@ class Relation:
         return result
 
     @classmethod
-    def create(cls, db: str, attrs: List[Attribute], tuples: List[namedtuple],
+    def create(cls, db: str, attrs: List[Attribute], tuples: List[namedtuple] | List[tuple],
                svar_name: Optional[str] = None) -> RelationValue:
         """
         Create a relation
@@ -450,7 +450,11 @@ class Relation:
         :return: Resulting relation as a PyRAL relation value
         """
         h = header(attrs)
-        b = body(tuples)
+        if tuples and isinstance(tuples[0], tuple) and hasattr(tuples[0], '_fields'):
+            b = body(tuples)
+        else:
+            b = body_tuple(attrs=attrs, tuples=tuples)
+
         cmd = f'set {_relation} [relation create {h} {b}]'
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
