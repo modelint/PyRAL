@@ -97,7 +97,7 @@ def body_tuple(attrs: List[Attribute], tuples: List[tuple]) -> str:
     for t in tuples:
         body_text += '{'
         for a, v in zip(attrs, t):
-            body_text += f"{a.name} {{{v}}} "
+            body_text += f"{snake(a.name)} {{{v}}} "
         body_text = body_text[:-1] + '} '
     return body_text[:-1]
 
