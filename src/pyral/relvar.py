@@ -28,9 +28,10 @@ class Relvar:
     @classmethod
     def printall(cls, db: str):
         """
-        Print out all relvar relations in the tclRAL database in alphabetic order
+        Print out all relvar relations in the tclRAL database in alphabetic order.
 
-        :param db: DB session name
+        Args:
+            db: DB session name.
         """
         cmd = 'relvar names'  # TclRAL returns all relvar names as a single string
         # strip off first '::' and then split the rest on ' ::'
@@ -61,19 +62,17 @@ class Relvar:
 
         Multiplicity and conditionality are specified as M, 1, Mc or 1c with the meanings:
 
-            M - at least one
-            1 - exactly one
-            Mc - zero or more
-            1c - zero or one
+            M - at least one, 1 - exactly one, Mc - zero or more, 1c - zero or one
 
-        :param db: DB session name
-        :param name: Name of the association, an association Rnum in SM xUML
-        :param from_relvar: The referring relvar (source)
-        :param from_attrs: The referential attributes in the source relvar
-        :param from_mult: Multiplicity conditionality associated with the source side of the association
-        :param to_relvar: The referenced relvar (target)
-        :param to_attrs: The referential attributes in the target relvar
-        :param to_mult: Multiplicity conditionality associated with the target side of the association
+        Args:
+            db: DB session name.
+            name: Name of the association, an association Rnum in SM xUML.
+            from_relvar: The referring relvar (source).
+            from_attrs: The referential attributes in the source relvar.
+            from_mult: Multiplicity conditionality associated with the source side of the association.
+            to_relvar: The referenced relvar (target).
+            to_attrs: The referential attributes in the target relvar.
+            to_mult: Multiplicity conditionality associated with the target side of the association.
         """
         # Join each attribute list into a string
         from_attr_str = "{" + ' '.join(from_attrs) + '}'
@@ -108,23 +107,23 @@ class Relvar:
 
         Multiplicity and conditionality is specified the same as in the create_association command.
 
-        Syntax from the TclRAL man page:
-        relvar correlation ?-complete? name correlRelvar
-             correlAttrListA refToSpecA refToRelvarA refToAttrListA
-             correlAttrListB refToSpecB refToRelvarB refToAttrListB
+        Syntax from the TclRAL man page::
 
-        Example TclRAL command from the TclRAL man page
-        PyRAL:
+            relvar correlation ?-complete? name correlRelvar
+                 correlAttrListA refToSpecA refToRelvarA refToAttrListA
+                 correlAttrListB refToSpecB refToRelvarB refToAttrListB
+
+        Example TclRAL command from the TclRAL man page::
 
             relvar correlation C1 OWNERSHIP
                 OwnerName + OWNER OwnerName
                 DogName * DOG DogName
 
         Additional example from the SM metamodel
-            (See SM class-attribute subsystem with participating classesIdentifier and Attribute where
-            the R22 association is:
-                Identifier requires M Attribute / Attribute is required in Mc Identifier
-                using association class Identifier Attribute):
+        (See SM class-attribute subsystem with participating classes Identifier and Attribute where
+        the R22 association is:
+        Identifier requires M Attribute / Attribute is required in Mc Identifier
+        using association class Identifier Attribute)::
 
             PyRAL input:
                 name: R22, correlation_relvar: Identifier_Attribute
@@ -135,26 +134,26 @@ class Relvar:
                 b_mult: M
                 b_ref_attrs: ['Name', 'Class', 'Domain']
 
-            TclRAL generated command
+            TclRAL generated command:
                 relvar correlation R22 Identifier_Attribute
                     {Identifier Class Domain} + Identifier
                     {Number Class Domain} {Attribute Class Domain} * Attribute {Name Class Domain}
 
-        :param db: DB session name
-        :param name: Name of the correlation
-        :param correlation_relvar: Name of the relvar holding the correlation
-        :param correl_a_attrs: Attrs in correlation relvar referencing a-side relvar
-        :param a_mult: Multiplicity on the a-side relvar
-        :param a_relvar: Name of the a-side relvar
-        :param a_ref_attrs: Attrs in the a-side relvar referencd by the correlation
-        :param correl_b_attrs: Attrs in correlation relvar referencing b-side relvar
-        :param b_mult: Multiplicity on the b-side relvar
-        :param b_relvar: Name of the b-side relvar
-        :param b_ref_attrs: Attrs in the b-side relvar referencd by the correlation
-        :param complete: True implies the cardinality of correlRelvar must equal the product of the cardinality of
-            refToRelvarA and refToRelvarB. If False, correlRelvar is allowed to have a subset of the Cartesian product
-            of the references.
-        :return:
+        Args:
+            db: DB session name.
+            name: Name of the correlation.
+            correlation_relvar: Name of the relvar holding the correlation.
+            correl_a_attrs: Attrs in correlation relvar referencing a-side relvar.
+            a_mult: Multiplicity on the a-side relvar.
+            a_relvar: Name of the a-side relvar.
+            a_ref_attrs: Attrs in the a-side relvar referenced by the correlation.
+            correl_b_attrs: Attrs in correlation relvar referencing b-side relvar.
+            b_mult: Multiplicity on the b-side relvar.
+            b_relvar: Name of the b-side relvar.
+            b_ref_attrs: Attrs in the b-side relvar referenced by the correlation.
+            complete: True implies the cardinality of correlRelvar must equal the product of the cardinality of
+                refToRelvarA and refToRelvarB. If False, correlRelvar is allowed to have a subset of the
+                Cartesian product of the references.
         """
         # Join each attribute list into a string
         correl_a_attrs_str = "{" + ' '.join(correl_a_attrs) + '}'
@@ -193,13 +192,13 @@ class Relvar:
         If the relationValue argument is missing, then no attempt is made to change the value of relvarName.
 
         Args:
-            db: DB session name
-            relvar: The name of an existing relvar
-            relation: This relation becomes the new value of the relvar
-            svar_name: An optional session variable that holds the result
+            db: DB session name.
+            relvar: The name of an existing relvar.
+            relation: This relation becomes the new value of the relvar.
+            svar_name: An optional session variable that holds the result.
 
         Returns:
-            The value of the relvar after the set operation is applied
+            The value of the relvar after the set operation is applied.
         """
         cmd = f"set {_relation} [relvar set {{{snake(relvar)}}} ${{{relation}}}]"
 
@@ -216,23 +215,27 @@ class Relvar:
         The tuples are concatenated into a single command that is either executed immediately
         or added to an open transaction if tr_name is provided.
 
-        The TclRAL syntax is:
+        The TclRAL syntax is::
+
             relvar insert <relvarName> ?<name-value-list> ...?
 
-        TclRAL example where an instance of Class is inserted into the SM xUML metamodel:
+        TclRAL example where an instance of Class is inserted into the SM xUML metamodel::
+
             relvar insert Class {Name {Accessible Shaft Level} Cnum {C1} Domain {Elevator Management}}
 
-        Where PyRAL input is:
+        Where PyRAL input is::
+
             relvar: 'Class'
             tuples: [ Class_i(Name='Accessible Shaft Level', Cnum='C1', Domain='Elevator Management') ]
 
-        Note that the emtpy set may be provided in the TclRAL command which results in a no-op.
-        PyRAL supports this feature by allowing an empty list of tuples to be specified
+        Note that the empty set may be provided in the TclRAL command which results in a no-op.
+        PyRAL supports this feature by allowing an empty list of tuples to be specified.
 
-        :param db: DB session name
-        :param relvar: The name of an existing relvar
-        :param tuples: A list of tuples named such that the attributes exactly match the relvar header
-        :param tr:  Optional transaction name, add to this transaction if supplied
+        Args:
+            db: DB session name.
+            relvar: The name of an existing relvar.
+            tuples: A list of tuples named such that the attributes exactly match the relvar header.
+            tr: Optional transaction name; add to this transaction if supplied.
         """
         relvar_s = snake(relvar)
         b = body(tuples)
@@ -259,18 +262,21 @@ class Relvar:
         into the disjoint sub sets given by the complete set of sub relvars.
 
         This constraint is used in SM xUML to support generalization relationships where
-        a superclass instance population is paritioned across two or more subclass instance
+        a superclass instance population is partitioned across two or more subclass instance
         populations.
 
-        The TclRAL syntax is:
-            relvar partition <name> <super> <superAttrList>
+        The TclRAL syntax is::
+
+            relvar partition <n> <super> <superAttrList>
                 <sub1> <sub1AttrList>
                 ...
 
-        A TclRAL command example is:
+        A TclRAL command example is::
+
             relvar partition R14 Subsystem_Element {Label Domain} Relationship {Rnum Domain} Class {Cnum Domain}
 
-        This is generated from the PyRAL input:
+        This is generated from the PyRAL input::
+
             name: 'R14'
             superclass_name: 'Subsystem Element'
             super_attrs: ['Label', 'Domain']
@@ -279,11 +285,12 @@ class Relvar:
         In the above examples both Relationship.Rnum and Class.Cnum refer to the Subsystem Element.Label
         attribute. So the ordering of identifier attributes for each relvar is significant.
 
-        :param db: DB session name
-        :param name: Name of the partition, a generalizaiton rnum in SM xUML
-        :param superclass_name: Name of the superclass relvar
-        :param super_attrs: A list of attributes constituting an identifier of the superclass referenced by
-        :param subs:
+        Args:
+            db: DB session name.
+            name: Name of the partition, a generalization rnum in SM xUML.
+            superclass_name: Name of the superclass relvar.
+            super_attrs: A list of attributes constituting an identifier of the superclass referenced by the subs.
+            subs: A dictionary mapping sub relvar names to their referential attribute lists.
         """
         super_attrs_str = '{' + ' '.join(super_attrs) + '}'
         all_subs = ""
@@ -301,23 +308,28 @@ class Relvar:
     @classmethod
     def create_relvar(cls, db: str, name: str, attrs: List[Attribute], ids: Dict[int, List[str]]) -> str:
         """
-        Create a relvar
+        Create a relvar.
 
-        Syntax from the TclRAL man page:
+        Syntax from the TclRAL man page::
+
             relvar create <relvarName> <heading> <id1> ?id2 ...?
 
-        Example TclRAL command:
+        Example TclRAL command::
+
             relvar create Waypoint {WPT_number int, Lat string, Long string, Frequency double} {WPT_number} {Lat Long}
 
-        This class has both a single attribute identifier "WPT_number" and a multiple attribute identifier {Lat Long}
-        We wrap each identifier in {} brackets for simplicity even though we only really need them to group
-        multiple attribute identifiers
+        This class has both a single attribute identifier ``WPT_number`` and a multiple attribute identifier
+        ``{Lat Long}``. We wrap each identifier in {} brackets for simplicity even though we only really need
+        them to group multiple attribute identifiers.
 
-        :param db: DB session name
-        :param name: Name of the new relvar
-        :param attrs: A list of Attributes (name, type - named tuples)
-        :param ids: A dictionary of {idnum: [attr_name, ...] } values
-        :return: The relation defined by the empty relvar in the form: <heading> {}
+        Args:
+            db: DB session name.
+            name: Name of the new relvar.
+            attrs: A list of Attributes (name, type - named tuples).
+            ids: A dictionary of {idnum: [attr_name, ...]} values.
+
+        Returns:
+            The relation defined by the empty relvar in the form: <heading> {}.
         """
         h = header(attrs)
 
@@ -341,25 +353,28 @@ class Relvar:
         """
         Modifies in place at most one tuple of the relvar's value.
 
-        TclRAL syntax:
+        TclRAL syntax::
+
             relvar updateone <relvarName> <tupleVarName> <id-name-value-list> <script>
 
-        Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute updated:
-        The TclRAL command (all on one line, but idented for readability here) is:
+        Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute updated.
+        The TclRAL command (all on one line, but indented for readability here) is::
+
             relvar updateone Attribute t
                 {Name {Floor} Class {Accessible Shaft Level} Domain {Elevator Management} }
                 {tuple update $t Type {Level Name}}
 
-        Generated from the PyRAL:
+        Generated from the PyRAL::
+
             relvar_name: 'Attribute'
             id: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
             update: {'Type': 'Level Name'}
 
         Args:
-            db: DB session name
-            relvar_name: The relvar to be updated
-            id: Identifier value for the tuple to be updated
-            update:  A dictionary of attribute value pairs whose values will be applied
+            db: DB session name.
+            relvar_name: The relvar to be updated.
+            id: Identifier value for the tuple to be updated.
+            update: A dictionary of attribute value pairs whose values will be applied.
 
         Returns:
             A relation value with the same heading as the value held in relvarName and whose body contains either
@@ -380,25 +395,30 @@ class Relvar:
         """
         Deletes in place at most one tuple of the relvar's value.
 
-        TclRAL syntax:
+        TclRAL syntax::
+
             relvar deleteone <relvarName> <tupleVarName> <id-name-value-list> <script>
 
-        Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute updated:
-        The TclRAL command (all on one line, but idented for readability here) is:
+        Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute deleted.
+        The TclRAL command (all on one line, but indented for readability here) is::
+
             relvar deleteone Attribute t
                 {Name {Floor} Class {Accessible Shaft Level} Domain {Elevator Management} }
-                {tuple update $t Type {Level Name}}
 
-        Generated from the PyRAL:
+        Generated from the PyRAL::
+
             relvar_name: 'Attribute'
             tid: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
 
-        :param db: DB session name
-        :param relvar_name: The relvar to be deleted
-        :param tid: Identifier value for the tuple to be deleted
-        :param tr: If name provided, appended to transaction, otherwise execute now and return result
-        :return: A relation value with the same heading as the value held in relvarName and whose body contains either
-        the single tuple that was updated or is empty if no matching tuple was found.
+        Args:
+            db: DB session name.
+            relvar_name: The relvar to be deleted from.
+            tid: Identifier value for the tuple to be deleted.
+            tr: If a name is provided, the command is appended to that transaction; otherwise execute immediately.
+
+        Returns:
+            A relation value with the same heading as the value held in relvarName and whose body contains either
+            the single tuple that was deleted or is empty if no matching tuple was found.
         """
         relvar_name_s = snake(relvar_name)
         id_str = ""
@@ -414,27 +434,27 @@ class Relvar:
     @classmethod
     def select_id(cls, db: str, relvar_name: str, tid: Dict, svar_name: Optional[str] = None) -> RelationValue:
         """
-        Deletes in place at most one tuple of the relvar's value.
+        Selects at most one tuple from the relvar matching the supplied identifier value.
 
-        TclRAL syntax:
-            relvar deleteone <relvarName> <tupleVarName> <id-name-value-list> <script>
+        TclRAL syntax::
 
-        Here is an example where an instance of Attribute in the SM Metamodel has its Type attribute updated:
-        The TclRAL command (all on one line, but idented for readability here) is:
-            relvar deleteone Attribute t
-                {Name {Floor} Class {Accessible Shaft Level} Domain {Elevator Management} }
-                {tuple update $t Type {Level Name}}
+            relvar restrictone <relvarName> <id-name-value-list>
 
-        Generated from the PyRAL:
+        Here is an example where an instance of Attribute in the SM Metamodel is selected.
+        Generated from the PyRAL::
+
             relvar_name: 'Attribute'
             tid: {'Name': 'Floor', 'Class': 'Accessible Shaft Level', 'Domain': 'Elevator Management'}
 
-        :param db: DB session name
-        :param svar_name:
-        :param relvar_name: The relvar to be deleted
-        :param tid: Identifier value for the tuple to be deleted
-        :return: A relation value with the same heading as the value held in relvarName and whose body contains either
-        the single tuple that was updated or is empty if no matching tuple was found.
+        Args:
+            db: DB session name.
+            relvar_name: The relvar to select from.
+            tid: Identifier value for the tuple to be selected.
+            svar_name: Optional session variable name to store the result.
+
+        Returns:
+            A relation value with the same heading as the value held in relvarName and whose body contains either
+            the single matching tuple or is empty if no matching tuple was found.
         """
         id_str = ""
         for id_attr, id_val in tid.items():

@@ -18,11 +18,14 @@ class Transaction:
     @classmethod
     def open(cls, db: str, name: str) -> str:
         """
-        Starts a new empty transaction by ensuring that there are no statements
+        Starts a new empty transaction by ensuring that there are no statements.
 
-        :param db: The DB session
-        :param name: The name of this transaction, must be unique for the db
-        :return: The provided name is returned to make it easy for client to use downstream
+        Args:
+            db: The DB session.
+            name: The name of this transaction, must be unique for the db.
+
+        Returns:
+            The provided name, returned to make it easy for the client to use downstream.
         """
         # Verify that the name is not an empty string
         if not name:
@@ -50,9 +53,10 @@ class Transaction:
         """
         Adds a statement to the list of pending statements in the open transaction.
 
-        :param db: The DB session
-        :param name: The name of the transaction
-        :param statement:  Statement to be appended
+        Args:
+            db: The DB session.
+            name: The name of the transaction.
+            statement: Statement to be appended.
         """
         # Ensure that the statement is not empty
         if not statement:
@@ -75,11 +79,14 @@ class Transaction:
     @classmethod
     def execute(cls, db: str, name: str):
         """
-        Executes all statements in the specified transaction as a TclRAL relvar eval transaction
+        Executes all statements in the specified transaction as a TclRAL relvar eval transaction.
 
-        :param db: The DB session
-        :param name: The name of the transaction
-        :return:  The TclRal success/fail result
+        Args:
+            db: The DB session.
+            name: The name of the transaction.
+
+        Returns:
+            The TclRAL success/fail result.
         """
         try:
             cmd = f"relvar eval " + "{\n    " + '\n    '.join(cls.pending[db][name]) + "\n}"

@@ -43,8 +43,8 @@ class Database:
         The purpose is mostly for diagnostics so that we can verify that there aren't any unneeded
         db sessions still hanging around after a procedure in the client completes.
 
-        :param db: Name of the database session
-        :return: Set of open database session names
+        Returns:
+            Set of open database session names.
         """
         return {k for k in cls.sessions.keys()}
 
@@ -55,8 +55,11 @@ class Database:
         The purpose is mostly for diagnostics so that we can verify that there aren't any unneeded
         relation variables still hanging around after a procedure in the client completes.
 
-        :param db: Name of the database session
-        :return: Dictionary mapping owner -> set of RV names
+        Args:
+            db: Name of the database session.
+
+        Returns:
+            Dictionary mapping owner -> set of RV names.
         """
         # We copy the value since when we do diagnostics we might want to capture a before/after pair of values
         # and without the shallow copy(), both before and after will point to the same possibly mutated value.
@@ -69,7 +72,8 @@ class Database:
         The purpose is mostly for diagnostics so that we can verify that there aren't any unneeded
         relation variables still hanging around after a procedure in the client completes.
 
-        :return: Dictionary mapping db session name -> (owner -> set of RV names)
+        Returns:
+            Dictionary mapping db session name -> (owner -> set of RV names).
         """
         return {db: cls.get_rv_names(db) for db in cls.get_open_sessions()}
 
@@ -85,8 +89,11 @@ class Database:
         We return the newly initiated tcl interpreter object though the client can more conveniently
         specify its session via the name.
 
-        :param name:
-        :return:  The TclRAL tcl interpreter instance is returned
+        Args:
+            name: Name to assign to the new session.
+
+        Returns:
+            The TclRAL tcl interpreter instance.
         """
         # Verify that the name is not an empty string
         if not name:
@@ -109,9 +116,10 @@ class Database:
     @classmethod
     def close_session(cls, name: str):
         """
-        Closes an open TclRAL session and removes any administrative data for that session
+        Closes an open TclRAL session and removes any administrative data for that session.
 
-        :param name:  Session name
+        Args:
+            name: Session name.
         """
 
         # Verify that this session is open
@@ -129,10 +137,11 @@ class Database:
     @classmethod
     def save(cls, db: str, fname: str):
         """
-        Save the db in the supplied file
+        Save the db in the supplied file.
 
-        :param db:  Database name
-        :param fname: File name
+        Args:
+            db: Database name.
+            fname: File name.
         """
         try:
             cls.sessions[db].eval(f"serializeToFile {fname}")
@@ -143,10 +152,11 @@ class Database:
     @classmethod
     def load(cls, db: str, fname: str):
         """
-        Load the db from the supplied file
+        Load the db from the supplied file.
 
-        :param db:  Database name
-        :param fname: File name
+        Args:
+            db: Database name.
+            fname: File name.
         """
         try:
             cls.sessions[db].eval(f"deserializeFromFile {fname}")
@@ -159,10 +169,13 @@ class Database:
         """
         Executes a TclRAL command via the supplied session and returns TclRAL's string result.
 
-        :param db: The DB session
-        :param cmd: A TclRAL command string
-        :param log:  If false, the result will not be logged. Useful when no meaningful result is expected
-        :return: The string received as a result of executing the command
+        Args:
+            db: The DB session.
+            cmd: A TclRAL command string.
+            log: If false, the result will not be logged. Useful when no meaningful result is expected.
+
+        Returns:
+            The string received as a result of executing the command.
         """
         _logger.info(f"cmd: {cmd}")
         try:
@@ -189,9 +202,12 @@ class Database:
         """
         Use this to obtain names of all created relvars using the optional pattern.
 
-        :param db:  Database name
-        :param pattern:  Apply this optional pattern
-        :return: TclRAl returned string
+        Args:
+            db: Database name.
+            pattern: Apply this optional pattern.
+
+        Returns:
+            TclRAL returned string.
         """
         try:
             result = cls.sessions[db].eval(f"relvar names {pattern}")
@@ -208,8 +224,9 @@ class Database:
         """
         Use this to obtain names of all created constraints and names using the optional pattern.
 
-        :param db:  Database name
-        :param pattern:  Apply this optional pattern
+        Args:
+            db: Database name.
+            pattern: Apply this optional pattern.
         """
         try:
             result = cls.sessions[db].eval(f"relvar constraint names {pattern}")

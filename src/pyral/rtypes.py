@@ -68,14 +68,18 @@ def snake(name: str) -> str:
 
 def header(attrs: List[Attribute]) -> str:
     """
-    Creates a header as a a bracketed list of attribute name pairs
-    that can be spedified as part of a TclRAL command.
+    Creates a header as a bracketed list of attribute name pairs
+    that can be specified as part of a TclRAL command.
 
-    Here's an example:
-    {WPT_number int, Lat string, Long string, Frequency double}
+    Here's an example::
 
-    :param attrs: A tuple of attributes (name, type) pairs
-    :return: A TclRAL header string
+        {WPT_number int, Lat string, Long string, Frequency double}
+
+    Args:
+        attrs: A tuple of attributes (name, type) pairs.
+
+    Returns:
+        A TclRAL header string.
     """
     header_text = "{"
     for a in attrs:
@@ -85,31 +89,36 @@ def header(attrs: List[Attribute]) -> str:
 
 def body_tuple(attrs: List[Attribute], tuples: List[tuple]) -> str:
     """
-    Create body from ordinary unnamed tuples and a list of attribute names
+    Create body from ordinary unnamed tuples and a list of attribute names.
+
     Args:
-        attrs:
-        tuples:
+        attrs: A list of Attribute (name, type) pairs.
+        tuples: A list of plain (unnamed) tuples whose values correspond to attrs.
 
     Returns:
-
+        A TclRAL body string.
     """
     body_text = ""
     for t in tuples:
         body_text += '{'
         for a, v in zip(attrs, t):
-            body_text += f"{snake(a.name)} {{{v}}} "
+            body_text += f"{a.name} {{{v}}} "
         body_text = body_text[:-1] + '} '
     return body_text[:-1]
 
 def body(tuples: List[namedtuple]) -> str:
     """
-    A body is a set of tuples formated into a single line TclRAL string.
+    A body is a set of tuples formatted into a single line TclRAL string.
 
-    Here's an example:
+    Here's an example::
 
-    {WPT_number 3 Lat {37° 46' 30" N} Long {-122° 25' 10"} Frequency 117.95}
+        {WPT_number 3 Lat {37° 46' 30" N} Long {-122° 25' 10"} Frequency 117.95}
 
-    :return: A single line of text with a string of TclRAL tuples
+    Args:
+        tuples: A list of named tuples whose field names match the relvar header.
+
+    Returns:
+        A single line of text with a string of TclRAL tuples.
     """
     # Process a list of named tuples
     body_text = ""
