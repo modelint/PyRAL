@@ -208,7 +208,7 @@ class Relvar:
         return Relation.make_pyrel(result)
 
     @classmethod
-    def insert(cls, db: str, relvar: str, tuples: List[namedtuple], tr: Optional[str] = None):
+    def insert(cls, db: str, relvar: str, tuples: List[namedtuple] | List[dict[str, Any]], tr: Optional[str] = None):
         """
         Insert a set of tuples into the value of a relvar, modifying it in place.
 
@@ -234,11 +234,16 @@ class Relvar:
         Args:
             db: DB session name.
             relvar: The name of an existing relvar.
-            tuples: A list of tuples named such that the attributes exactly match the relvar header.
+            tuples: A list of tuples named such that the attributes exactly match the relvar header. It can be
+              supplied as a list of named tuples or a list of dictionaries, each with identical keys matching
+              the relvar's attribute list
             tr: Optional transaction name; add to this transaction if supplied.
         """
         relvar_s = snake(relvar)
-        b = body(tuples)
+        if tuples and isinstance(tuples[0], tuple) and hasattr(tuples[0], '_fields'):
+            b = body(tuples)
+        else:
+            b = body_dict(tuples=tuples)
 
         # Start command with the relvar command prefix
         cmd = f"relvar insert {relvar_s} {b}"

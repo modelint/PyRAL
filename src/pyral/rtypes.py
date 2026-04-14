@@ -87,12 +87,32 @@ def header(attrs: List[Attribute]) -> str:
         header_text += f"{a.name.replace(' ', delim)} {a.type.replace(' ', delim)} "
     return header_text[:-1] + "}"  # Replace the trailing space with a closing bracket
 
-def body_tuple(attrs: List[Attribute], tuples: List[tuple]) -> str:
+def body_dict(tuples: list[dict[str, str | int | float]]) -> str:
+    """
+    Create body from a list of dictionaries.
+
+    Args:
+        tuples: A list of dictionaries mapping attribute names to values.
+
+    Returns:
+        A TclRAL body string.
+    """
+    if not tuples:
+        return ""
+    body_text = ""
+    for t in tuples:
+        body_text += '{'
+        for a, v in t.items():
+            body_text += f"{a} {{{v}}} "
+        body_text = body_text[:-1] + '} '
+    return body_text[:-1]
+
+def body_tuple(attrs: List[str], tuples: List[tuple]) -> str:
     """
     Create body from ordinary unnamed tuples and a list of attribute names.
 
     Args:
-        attrs: A list of Attribute (name, type) pairs.
+        attrs: A list of Attribute names
         tuples: A list of plain (unnamed) tuples whose values correspond to attrs.
 
     Returns:
@@ -102,7 +122,7 @@ def body_tuple(attrs: List[Attribute], tuples: List[tuple]) -> str:
     for t in tuples:
         body_text += '{'
         for a, v in zip(attrs, t):
-            body_text += f"{a.name} {{{v}}} "
+            body_text += f"{a} {{{v}}} "
         body_text = body_text[:-1] + '} '
     return body_text[:-1]
 
