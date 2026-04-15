@@ -31,10 +31,10 @@ class Database:
     # TODO: Convert this class to instance methods and a singleton pattern
     # Path to the TclRAL library
     ral_lib_path = Path(__file__).parent / "tcl_scripts" / "init_TclRAL.tcl"
-    sessions = {} # A dictionary of open TclRAL sessions keyed by session name
+    sessions = {}  # A dictionary of open TclRAL sessions keyed by session name
     # Temporary relational variable names keyed by session name
     # Key is the name of the owner and value is the variable name
-    rv_names : dict[str, dict[str, set[str]]] = {}
+    rv_names: dict[str, dict[str, set[str]]] = {}
 
     @classmethod
     def get_open_sessions(cls) -> set[str]:
@@ -49,7 +49,7 @@ class Database:
         return {k for k in cls.sessions.keys()}
 
     @classmethod
-    def get_rv_names(cls, db: str) -> dict[str, set[str]]:
+    def get_rv_names(cls, db: str, p: bool = True) -> dict[str, set[str]]:
         """
         Return the relational variable names dictionary for a given database session.
         The purpose is mostly for diagnostics so that we can verify that there aren't any unneeded
@@ -57,25 +57,56 @@ class Database:
 
         Args:
             db: Name of the database session.
+            p: Prints nicely to console if true
 
         Returns:
             Dictionary mapping owner -> set of RV names.
         """
         # We copy the value since when we do diagnostics we might want to capture a before/after pair of values
         # and without the shallow copy(), both before and after will point to the same possibly mutated value.
-        return cls.rv_names.get(db, {}).copy()
+        owners = cls.rv_names.get(db, {}).copy()
+        if p:
+            print(f"::: DB Relational Variables :::")
+            print(f"Database: {db}")
+            for owner, rvs in owners.items():
+                print(f"Owner: {owner}")
+                print("Names:")
+                for rv in sorted(rvs):
+                    print(f"    {rv}")
+                pass
+                print("---")
+            print(":::")
+
+        return owners
 
     @classmethod
-    def get_all_rv_names(cls) -> dict[str, dict[str, set[str]]]:
+    def get_all_rv_names(cls, p: bool = True) -> dict[str, dict[str, set[str]]]:
         """
         Return the relational variable names dictionary for all open database sessions.
         The purpose is mostly for diagnostics so that we can verify that there aren't any unneeded
         relation variables still hanging around after a procedure in the client completes.
 
+        Args:
+            p: Prints nicely to console if true
+
         Returns:
             Dictionary mapping db session name -> (owner -> set of RV names).
         """
-        return {db: cls.get_rv_names(db) for db in cls.get_open_sessions()}
+        names = {db: cls.get_rv_names(db) for db in cls.get_open_sessions()}
+        if p:
+            print("::: Relational Variables :::")
+            for db, owners in names.items():
+                print(f"Database: {db}")
+                for owner, rvs in owners.items():
+                    print(f"Owner: {owner}")
+                    print("Names:")
+                    for rv in sorted(rvs):
+                        print(f"    {rv}")
+                    pass
+                    print("---")
+                pass
+            print(":::")
+        return names
 
     @classmethod
     def open_session(cls, name: str) -> Tk:
