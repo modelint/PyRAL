@@ -8,11 +8,12 @@ import re
 from tabulate import tabulate
 from typing import List, Optional, Dict, Tuple
 from collections import namedtuple
+from collections.abc import Sequence
 
-from pyral.exceptions import TclRALException
 # PyRAL
 from pyral.rtypes import *
 from pyral.database import Database
+from pyral.exceptions import TclRALException
 
 _logger = logging.getLogger(__name__)
 
@@ -366,7 +367,7 @@ class Relation:
         return cmd
 
     @classmethod
-    def _cmd_project(cls, db: str, attributes: Tuple[str, ...], exclude: bool = False, relation: str = _relation) -> str:
+    def _cmd_project(cls, db: str, attributes: Sequence[str], exclude: bool = False, relation: str = _relation) -> str:
         if relation is None:
             relation_s = _relation
         else:
@@ -1018,7 +1019,7 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def project(cls, db: str, attributes: Tuple[str, ...], exclude: bool = False, relation: str = _relation,
+    def project(cls, db: str, attributes: Sequence[str], exclude: bool = False, relation: str = _relation,
                 svar_name: Optional[str] = None) -> RelationValue:
         """
         Returns a relation whose heading consists of only a set of selected attributes.
