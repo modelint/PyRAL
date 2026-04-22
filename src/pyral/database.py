@@ -79,7 +79,7 @@ class Database:
         return owners
 
     @classmethod
-    def get_rv_names(cls, db: str | None = None, p: bool = True) -> (
+    def get_rv_names(cls, db: str | None = None, p: bool = False) -> (
             dict[str, dict[str, set[str]]] | dict[str, set[str]]):
         """
         Return the relational variable names dictionary for all open database sessions.
@@ -94,10 +94,12 @@ class Database:
             Dictionary mapping db session name -> (owner -> set of RV names).
         """
         if db:
-            print("::: DB Relational Variables :::")
+            if p:
+                print("::: DB Relational Variables :::")
             return cls._db_rv_names(db, p)
         else:
-            print("::: All Relational Variables :::")
+            if p:
+                print("::: All Relational Variables :::")
             return {s: cls._db_rv_names(s, p) for s in cls.get_open_sessions()}
 
     @classmethod
