@@ -176,6 +176,20 @@ class Relvar:
         Database.execute(db, cmd=verify_cmd)
 
     @classmethod
+    def unset(cls, db:str, relvar: str):
+        """
+        Use the TclRAL relvar unset command to correctly free up a previously defined
+        relvar.
+
+        Args:
+            db: Database session
+            relvar: Name of the relvar to delete
+        """
+        Relation.raw(
+            db=db, cmd_str=f'relvar unset {relvar}'
+        )
+
+    @classmethod
     def set(cls, db: str, relvar: str, relation: str = _relation, svar_name: Optional[str] = None) -> RelationValue:
         """
         From the TclRAL documentation:

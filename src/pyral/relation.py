@@ -937,7 +937,7 @@ class Relation:
 
     @classmethod
     def raw(cls, db: str, cmd_str: str, relation: str = _relation,
-            svar_name: Optional[str] = None) -> RelationValue:
+            svar_name: Optional[str] = None) -> RelationValue | None:
         """
         Passes tcl cmd text straight through, but uses the variable and relation
         naming mechanism to pipeline input and output like all other commands.
@@ -955,7 +955,8 @@ class Relation:
         result = Database.execute(db=db, cmd=cmd)
         if svar_name:  # Save the result using the supplied session variable name
             cls.set_var(db=db, name=svar_name)
-        return cls.make_pyrel(result)
+        if result:
+            return cls.make_pyrel(result)
 
     @classmethod
     def heading(cls, db: str, relation: str = _relation):
