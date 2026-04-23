@@ -38,17 +38,17 @@ def play():
     result = Relation.restrict(db=ev, relation="Shaft", restriction=R, svar_name="s_rv")
     Relation.print(db=ev, variable_name="s_rv")
     pass
-    # Relvar.printall(db=ev)
-    # Relation.create(db=ev, attrs=[
-    #     Attribute(name="ID", type="string"),
-    #     Attribute(name="Speed", type="double"),
-    #     Attribute(name="In_service", type="boolean")],
-    #                 tuples=[
-    #                     Shaft_i(ID='S1', Speed=31.3, In_service=False),
-    #                     Shaft_i(ID='S2', Speed=14.2, In_service=False),
-    #                     Shaft_i(ID='S3', Speed=20.16, In_service=False),
-    #                 ], svar_name="shafts_rv")
-    #
+    Relvar.printall(db=ev)
+    Relation.create(db=ev, attrs=[
+        Attribute(name="ID", type="string"),
+        Attribute(name="Speed", type="double"),
+        Attribute(name="In_service", type="boolean")],
+                    tuples=[
+                        Shaft_i(ID='S1', Speed=31.3, In_service=False),
+                        Shaft_i(ID='S2', Speed=14.2, In_service=False),
+                        Shaft_i(ID='S3', Speed=20.16, In_service=False),
+                    ], svar_name="shafts_rv")
+
     # Relvar.set(db=ev, relvar="Shaft", relation="shafts_rv")
     # Relation.set()
     # Relation.raw(db=ev, cmd_str="relation restrictwith ${shafts_rv} {[expr {$Speed > 14}]}",
@@ -83,7 +83,7 @@ def play():
     # R = f"ID:<{v}> OR (In_service:<{True}> AND Speed > {s})"
 
     # result = Relation.restrict(db=ev, relation="shafts_rv", svar_name="restriction")
-    # result = Relation.restrict(db=ev, relation="shafts_rv", restriction=R, svar_name="restriction")
+    result = Relation.restrict(db=ev, relation="shafts_rv", restriction=R, svar_name="restriction")
     # Relation.print(db=ev, variable_name="restriction")
 
     # result = Relation.rank(db=ev, relation="shafts_rv", sort_attr_name="Speed", order=Order.DESCENDING)

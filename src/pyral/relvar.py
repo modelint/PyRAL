@@ -388,10 +388,10 @@ class Relvar:
         relvar_name_s = snake(relvar_name)
         id_str = ""
         for id_attr, id_val in id.items():
-            id_str += f"{id_attr} {{{id_val}}} "
+            id_str += f"{snake(id_attr)} {{{id_val}}} "
         update_str = ""
         for u_attr, u_val in update.items():
-            update_str += u_attr + " {" + u_val + "}"
+            update_str += snake(u_attr) + " {" + u_val + "} "
         cmd = f'relvar updateone {relvar_name_s} t {{{id_str}}} {{tuple update $t {update_str}}}'
         return Database.execute(db, cmd)
 
