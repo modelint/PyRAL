@@ -528,7 +528,7 @@ class Relation:
         """
         attr_list = "{"
         for k, v in attrs.items():
-            attr_list += f"{snake(k)} {v} "
+            attr_list += f"{snake(k)} {snake(v)} "
         return attr_list[:-1] + "}"
 
     @classmethod
