@@ -392,6 +392,10 @@ class Relation:
         return f'relation union {" ".join(rvars)}'
 
     @classmethod
+    def _cmd_emptyof(cls, relation) -> str:
+        return f'relation emptyof ${snake(relation)}'
+
+    @classmethod
     def _cmd_join(cls, rname2: str, attrs, rname1: Optional[str] = None) -> str:
         if rname1 is None:
             rname1 = _relation
@@ -877,6 +881,25 @@ class Relation:
         if printout:
             print(table_text)
         return f"{tableheader}\n{table_text}"
+
+    @classmethod
+    def emptyof(cls, db: str, relation: str, svar_name: Optional[str] = None) -> RelationValue:
+        """
+        Returns a new relation that has the same heading as relation with a zero cardinality (empty body).
+
+        Args:
+            db: DB session name.
+            relation: The relation to be returned with a zero cardinality
+            svar_name: Relation result is stored in this optional TclRAL variable for subsequent operations to use.
+
+        Returns:
+            Resulting relation as a PyRAL relation value.
+        """
+        cmd = f'set {_relation} [{cls._cmd_emptyof(relation=relation)}]'
+        result = Database.execute(db=db, cmd=cmd)
+        if svar_name:  # Save the result using the supplied session variable name
+            cls.set_var(db=db, name=svar_name)
+        return cls.make_pyrel(result)
 
     @classmethod
     def union(cls, db: str, relations: Tuple[str, ...], svar_name: Optional[str] = None) -> RelationValue:
