@@ -25,7 +25,6 @@ _logger = logging.getLogger(__name__)
 # to be the input.
 _relation = r'^relation'  # Name of the latest relation result. Carat prevents name collision
 _RANK = "_rank"  # Default name of the rank attribute added by extension using the rank command
-_TAG = "_tag"  # Default name of the tag attribute added by the tag command
 session_variable_names = set()  # Maintain a list of temporary variable names in use
 
 def _next_tuple_var(c: str) -> str:
@@ -1163,7 +1162,7 @@ class Relation:
         return cls.make_pyrel(result)
 
     @classmethod
-    def tag(cls, db: str, tag_attr_name: str = _TAG, sort_attrs: Tuple[str, ...] = None,
+    def tag(cls, db: str, tag_attr_name: str = TAG, sort_attrs: Tuple[str, ...] = None,
             order: Order = Order.ASCENDING, relation: str = _relation,
             svar_name: Optional[str] = None) -> RelationValue:
         """
@@ -1228,9 +1227,9 @@ class Relation:
             return Relation.project(db=db, attributes=(_RANK,), exclude=True, svar_name=svar_name)
         else:  # Card must be ONE
             Relation.tag(db=db, order=order, sort_attrs=(attr_name,), relation=relation)
-            R = f"{_TAG}:0"
+            R = f"{TAG}:0"
             Relation.restrict(db=db, restriction=R)
-            return Relation.project(db=db, attributes=(_TAG,), exclude=True, svar_name=svar_name)
+            return Relation.project(db=db, attributes=(TAG,), exclude=True, svar_name=svar_name)
 
     @classmethod
     def restrict(cls, db: str, restriction: Optional[str] = None, relation: str = _relation,

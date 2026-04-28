@@ -43,4 +43,15 @@ def play():
     # Now get the empty body
     e_result = Relation.emptyof(db=ev, relation="Shaft", svar_name="e_rv")
     Relation.print(db=ev, variable_name="e_rv")
+
+    # Select only a single tuple play
+    Relation.tag(db=ev, relation="Shaft", svar_name="t_rv")
+    Relation.print(db=ev, variable_name="t_rv")
+    c = Relation.cardinality(db=ev, rname="t_rv")
+    print(f"Selecting one with tag: {c}")
+    import random
+    stag = random.randrange(c)
+    Relation.restrict(db=ev, relation="t_rv", restriction=f"_tag:<{stag}>", svar_name="c_rv")
+    Relation.print(db=ev, variable_name="c_rv")
+    pass
     Database.close_session(ev)

@@ -20,6 +20,7 @@ RestrictCmd = namedtuple('RestrictCmd', 'relation restriction')
 CardinalityCmd = namedtuple('CardinalityCmd', 'rname')
 
 Cardinality = "relation cardinality $s"
+TAG = "_tag"  # Default tag attribute name
 
 tcl_type = {
     'str': 'string',
